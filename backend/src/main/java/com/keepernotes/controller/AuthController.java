@@ -6,6 +6,7 @@ import com.keepernotes.dto.request.RegisterRequest;
 import com.keepernotes.dto.response.ApiResponse;
 import com.keepernotes.dto.response.AuthResponse;
 import com.keepernotes.dto.response.UserResponse;
+import com.keepernotes.exception.AppException;
 import com.keepernotes.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -55,6 +56,7 @@ public class AuthController {
     @GetMapping("/me")
     @Operation(summary = "Get the current authenticated user's profile")
     public ResponseEntity<ApiResponse<UserResponse>> me(@AuthenticationPrincipal UUID userId) {
+        if (userId == null) throw AppException.unauthorized("Authentication required");
         return ResponseEntity.ok(ApiResponse.ok(authService.me(userId)));
     }
 }

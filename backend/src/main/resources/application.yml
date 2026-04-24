@@ -27,7 +27,7 @@ spring:
       url: ${REDIS_URL:redis://localhost:6379}
 
 server:
-  port: 8080
+  port: 8081
   error:
     include-message: never
     include-stacktrace: never
@@ -50,9 +50,10 @@ app:
 
 springdoc:
   api-docs:
-    path: /api/docs/json
+    path: /v3/api-docs
   swagger-ui:
-    path: /api/docs
+    path: /swagger-ui.html
+    try-it-out-enabled: true
   show-actuator: false
 
 logging:
