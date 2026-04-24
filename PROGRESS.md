@@ -189,26 +189,92 @@ Invoke-RestMethod -Method GET -Uri "http://localhost:8081/api/auth/me" `
 
 ---
 
-## 🔲 Phases Yet to Come
+---
 
-### Phase 3 — Core Notes CRUD ← NEXT
-**Goal:** The actual note-taking functionality. This is the heart of the app.
+### ✅ Phase 3 — Core Notes CRUD
+**Status:** Complete  
+**Date:** 2026-04-24
 
-What we'll build:
-- **Backend:** 10 REST endpoints — list, create, get, update, delete, pin, archive, label assignment
-- **Frontend:** Masonry grid layout, note cards with hover actions, Tiptap rich text editor modal, color picker, labels sidebar, pinned notes section, real-time search, empty states
-- **New migration:** Labels table already exists from V1 — just need the JPA entities and repositories
+#### What was built
 
-Key visual targets:
-- Pinterest-style masonry grid (not uniform rows)
-- Card hover reveals action icons (delete, archive, color, label, duplicate)
-- Smooth animations: card lift on hover, fade out on delete, slide in on create
-- Pinned notes shown above main grid with divider
-- Empty state illustrations
+**Backend — Notes & Labels system:**
+
+| File | Purpose |
+|---|---|
+| `entity/Note.java` | JPA entity: title, content (text), color, pinned, archived, soft-delete, ManyToMany labels |
+| `entity/Label.java` | JPA entity: id, name, user (ManyToOne) |
+| `repository/NoteRepository.java` | JPQL queries: findActive (with search), findArchived, findByLabel |
+| `repository/LabelRepository.java` | findByUserIdOrderByName, existsByUserIdAndName |
+| `dto/request/NoteRequest.java` | title?, content?, color?, labelIds? |
+| `dto/response/NoteResponse.java` | Full note DTO with embedded LabelResponse list |
+| `dto/response/LabelResponse.java` | id + name |
+| `service/NoteService.java` | Full CRUD: getActive, getArchived, getById, create, update, delete (soft), togglePin, toggleArchive, setLabels |
+| `service/LabelService.java` | list, create, delete — enforces uniqueness per user |
+| `controller/NoteController.java` | 10 REST endpoints |
+| `controller/LabelController.java` | 3 REST endpoints |
+
+**API endpoints built:**
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/notes` | List active notes (optional `?search=` and `?labelId=`) |
+| POST | `/api/notes` | Create a note |
+| GET | `/api/notes/:id` | Get a single note |
+| PUT | `/api/notes/:id` | Update a note |
+| DELETE | `/api/notes/:id` | Soft-delete a note |
+| POST | `/api/notes/:id/pin` | Toggle pin |
+| POST | `/api/notes/:id/archive` | Toggle archive |
+| PUT | `/api/notes/:id/labels` | Set labels on a note |
+| GET | `/api/notes/archived` | List archived notes |
+| GET | `/api/labels` | List all labels for current user |
+| POST | `/api/labels` | Create a label |
+| DELETE | `/api/labels/:id` | Delete a label |
+
+**Frontend — Notes UI:**
+
+| File | Purpose |
+|---|---|
+| `lib/notesApi.ts` | Note / Label types, NOTE_COLORS (10 colors), `notesApi` and `labelsApi` wrappers, `colorStyle()` helper |
+| `components/ColorPicker.tsx` | Swatch grid — 10 circular color buttons |
+| `components/NoteCard.tsx` | Framer Motion card: title, plain-text preview (line-clamp-6), label chips, hover action bar (pin / color / archive / delete) |
+| `components/NoteEditor.tsx` | Tiptap modal: title input, rich text body, color picker, Bold / Italic / Bullet toolbar, Close saves |
+| `app/dashboard/page.tsx` | Full dashboard: sticky header + search, left sidebar (Notes / Archive / Labels), CSS masonry grid, pinned section, AnimatePresence modal |
+| `app/globals.css` | Tiptap placeholder + prose styles |
+
+**How the notes flow works:**
+1. Dashboard loads → `GET /api/notes` fetches active notes
+2. Click "Take a note…" → `NoteEditor` modal opens (Tiptap rich text)
+3. Click Close / Escape → saves via `POST /api/notes` or `PUT /api/notes/:id`
+4. Card appears in masonry grid with Framer Motion entrance animation
+5. Hover card → action bar fades in (pin / color picker / archive / delete)
+6. Search bar debounced 300 ms → `GET /api/notes?search=` refetches live
+7. Sidebar "Archive" → `GET /api/notes/archived` swaps the grid
+8. Labels sidebar: click "+" → inline input → `POST /api/labels` → click label → `GET /api/notes?labelId=`
+
+#### Issues encountered & resolved
+| Issue | Fix |
+|---|---|
+| `function lower(bytea) does not exist` | When `:search` param is null, Hibernate passes it as `bytea` to PostgreSQL. Fixed with `CAST(:search AS string)` in JPQL so Hibernate emits `CAST(? AS varchar)` |
+| Tiptap SSR hydration mismatch in Next.js | Added `immediatelyRender: false` to `useEditor({...})` config in `NoteEditor.tsx` |
+
+#### Deliverable verified
+```
+- Notes create, display in masonry grid ✅
+- Rich text (bold, italic, bullet list) in editor ✅
+- Pin / archive / delete from card hover ✅
+- Color picker on both card and editor ✅
+- Real-time debounced search ✅
+- Label creation and label-filtered view ✅
+- Pinned section shown above "Other" section ✅
+- Empty state shown when no notes ✅
+- Animations: card entrance, hover lift, exit fade ✅
+```
 
 ---
 
-### Phase 4 — Image Attachments
+## 🔲 Phases Yet to Come
+
+### Phase 4 — Image Attachments ← NEXT
 - Upload images to Cloudflare R2
 - Drag-and-drop + paste into note editor
 - Image thumbnail strip on note cards
@@ -299,4 +365,6 @@ initial project structure
 add auth system: JWT, register, login, refresh, logout
 fix security config and me endpoint null principal handling
 add login, register, and dashboard pages with auth store
+add notes and labels CRUD with masonry grid and Tiptap editor
+fix lower(bytea) JPQL bug and Tiptap SSR hydration error
 ```

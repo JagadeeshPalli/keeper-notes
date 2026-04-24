@@ -17,8 +17,8 @@ public interface NoteRepository extends JpaRepository<Note, UUID> {
               AND n.archived = false
               AND n.deletedAt IS NULL
               AND (:search IS NULL
-                   OR LOWER(n.title) LIKE LOWER(CONCAT('%', :search, '%'))
-                   OR LOWER(n.content) LIKE LOWER(CONCAT('%', :search, '%')))
+                   OR LOWER(n.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))
+                   OR LOWER(n.content) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
             ORDER BY n.pinned DESC, n.updatedAt DESC
             """)
     List<Note> findActive(@Param("userId") UUID userId, @Param("search") String search);

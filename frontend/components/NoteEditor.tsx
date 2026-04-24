@@ -21,6 +21,7 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
   const [saving, setSaving] = useState(false)
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Placeholder.configure({ placeholder: 'Take a note…' }),
