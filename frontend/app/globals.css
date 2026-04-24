@@ -20,7 +20,24 @@
 }
 
 body {
-  background: var(--background);
+  background: #0f0f0f;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Tiptap editor placeholder */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #52525b;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* Tiptap prose styles */
+.tiptap ul { list-style: disc; padding-left: 1.25rem; }
+.tiptap ol { list-style: decimal; padding-left: 1.25rem; }
+.tiptap strong { font-weight: 600; }
+.tiptap em { font-style: italic; }
+.tiptap p { margin: 0 0 0.5rem 0; }
+.tiptap p:last-child { margin-bottom: 0; }
