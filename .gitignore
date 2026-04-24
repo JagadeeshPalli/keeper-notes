@@ -1,0 +1,38 @@
+# ─── Secrets ───────────────────────────────────────────────────────────────────
+.env
+*.env.local
+!*.env.example
+!*.env.local.example
+
+# ─── Java / Maven ──────────────────────────────────────────────────────────────
+backend/target/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+# ─── IntelliJ ──────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ─── Next.js ───────────────────────────────────────────────────────────────────
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+frontend/.vercel/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# ─── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
