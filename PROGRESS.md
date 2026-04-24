@@ -1,0 +1,302 @@
+# Keeper Notes — Build Progress
+
+## Project Overview
+A Google Keep-inspired full-stack note-taking app built as a portfolio project.
+Designed to impress technical recruiters by showing depth across frontend, backend, database, real-time features, and AI integration.
+
+**Live goal:** Deployed at a public URL with a demo account, API docs, and a polished UI.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 14, TypeScript, Tailwind CSS, Zustand, Framer Motion, Tiptap, SWR |
+| Backend | Spring Boot 3, Java 21, Spring Security, JWT, Spring WebSocket, Spring AI |
+| Database | PostgreSQL 16 with pgvector extension |
+| Cache | Redis 7 |
+| Migrations | Flyway |
+| API Docs | SpringDoc OpenAPI (Swagger UI) |
+| Storage | Cloudflare R2 (image uploads) |
+| Hosting | Vercel (frontend) + Render (backend) + Supabase (DB) + Upstash (Redis) |
+
+---
+
+## Environment
+
+| Tool | Version / Notes |
+|---|---|
+| Java | 21.0.3 (Oracle HotSpot) |
+| Maven | 3.9.5 (+ wrapper in /backend) |
+| Node.js | 20 LTS |
+| Docker Desktop | 27.4.0 |
+| IntelliJ IDEA | Licensed (expires 05/07/2026) — used for backend |
+| VS Code | Used for frontend |
+| OS | Windows 11 |
+
+### Local ports
+| Service | Port |
+|---|---|
+| Spring Boot backend | 8081 (port 8080 was taken by Tomcat9 Windows service) |
+| Next.js frontend | 3000 |
+| PostgreSQL | 5432 |
+| Redis | 6379 |
+| pgAdmin | 5050 |
+
+### Key files
+- `backend/.env` — secrets, never committed (copy from `.env.example`)
+- `frontend/.env.local` — frontend env vars, never committed
+- `docker-compose.yml` — starts all local services
+
+---
+
+## Phase Progress
+
+---
+
+### ✅ Phase 1 — Project Setup
+**Status:** Complete  
+**Date:** 2026-04-24
+
+#### What was built
+- Monorepo structure: `/frontend`, `/backend`, `/docker`
+- `docker-compose.yml` with PostgreSQL 16 (pgvector), Redis 7, pgAdmin
+- Spring Boot 3 project scaffolded with full `pom.xml`:
+  - Spring Web, Security, OAuth2, Data JPA, Validation, WebSocket, Redis, Flyway, Lombok, MapStruct, SpringDoc OpenAPI, JJWT
+- Next.js 14 scaffolded with TypeScript, Tailwind CSS, App Router, ESLint
+- `application.yml` — all config reads from environment variables, zero hardcoding
+- First Flyway migration `V1__create_initial_schema.sql` — full schema created:
+  - `users`, `notes`, `labels`, `note_labels`, `note_images`, `note_versions`, `note_collaborators`
+  - pgvector `embedding VECTOR(768)` column on notes (for Phase 7 AI semantic search)
+  - All indexes: user_id, created_at, is_archived, is_pinned
+- Maven wrapper (`mvnw`) added for CI compatibility
+- `.gitignore` covering `.env`, `node_modules`, `target/`, `.next/`
+- GitHub Actions CI workflow (`.github/workflows/ci.yml`):
+  - On push to `main` or `dev`: runs `./mvnw test` for backend, `npm run build` for frontend
+- Git initialized, `main` and `dev` branches pushed to GitHub
+- `.env.example` and `.env.local.example` committed as templates
+
+#### Issues encountered & resolved
+| Issue | Fix |
+|---|---|
+| `flyway-database-postgresql` missing version in pom.xml | Added explicit version `10.12.0` |
+| Spring AI dependency caused Maven resolution failure | Removed for now, will add back in Phase 7 |
+| `docker-compose.yml` had deprecated `version:` field | Removed the field |
+| Port 8080 in use by Tomcat9 Windows service | Changed Spring Boot to port 8081 via `SERVER_PORT` env var |
+
+#### Deliverable verified
+```
+docker compose up -d       → 3 containers healthy (db, redis, pgadmin)
+pgAdmin at :5050           → keepernotes database visible with all tables
+```
+
+---
+
+### ✅ Phase 2 — Authentication
+**Status:** Complete  
+**Date:** 2026-04-24
+
+#### What was built
+
+**Backend — 19 new files across 8 packages:**
+
+| Package | Files | Purpose |
+|---|---|---|
+| `config` | `AppProperties.java`, `SecurityConfig.java`, `RedisConfig.java` | App config, Spring Security setup, Redis beans |
+| `entity` | `User.java` | JPA entity mapped to `users` table |
+| `repository` | `UserRepository.java` | JPA repo: findByEmail, findByGoogleId, existsByEmail |
+| `dto/request` | `RegisterRequest.java`, `LoginRequest.java`, `RefreshTokenRequest.java` | Validated request bodies |
+| `dto/response` | `ApiResponse.java`, `AuthResponse.java`, `UserResponse.java` | Standardized response wrappers |
+| `service` | `JwtService.java`, `TokenService.java`, `AuthService.java` | JWT signing, Redis refresh tokens, auth logic |
+| `security` | `UserDetailsServiceImpl.java` | Spring Security user loading |
+| `filter` | `JwtAuthFilter.java` | Validates Bearer token on every request |
+| `controller` | `AuthController.java` | REST endpoints |
+| `exception` | `AppException.java`, `GlobalExceptionHandler.java` | Structured error handling |
+
+**API endpoints built:**
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/auth/register` | Public | Create account, returns JWT pair |
+| POST | `/api/auth/login` | Public | Login, returns JWT pair |
+| POST | `/api/auth/refresh` | Public | Exchange refresh token for new access token |
+| POST | `/api/auth/logout` | Public | Invalidate refresh token in Redis |
+| GET | `/api/auth/me` | 🔒 JWT | Returns current user profile |
+
+**How JWT auth works:**
+1. Login/register → backend signs a JWT with HMAC-SHA512 using `JWT_SECRET`
+2. Access token lives 24h, stored in browser `localStorage`
+3. Refresh token lives 7 days, stored in Redis (`refresh:{token}` → userId)
+4. Every API request: `Authorization: Bearer <token>` header → `JwtAuthFilter` validates
+5. If 401: axios interceptor clears tokens and redirects to `/login`
+
+**API response format (all endpoints):**
+```json
+// Success
+{ "data": { ... }, "message": "optional" }
+
+// Error
+{ "error": { "code": "EMAIL_TAKEN", "message": "..." } }
+
+// Validation error (422)
+{ "error": { "code": "VALIDATION_ERROR", "fields": { "email": "..." } } }
+```
+
+**Frontend — auth flow:**
+
+| File | Purpose |
+|---|---|
+| `lib/api.ts` | Axios instance with auto Bearer header + 401 interceptor |
+| `store/authStore.ts` | Zustand store: user state, login(), register(), logout(), loadUser() |
+| `app/login/page.tsx` | Dark-themed login form with error display |
+| `app/register/page.tsx` | Register form with validation error handling |
+| `app/dashboard/page.tsx` | Protected page — redirects to login if no valid token |
+
+#### Issues encountered & resolved
+| Issue | Fix |
+|---|---|
+| `curl` in PowerShell doesn't support JSON escaping | Switched to `Invoke-RestMethod` |
+| Swagger UI returned 403 | Added `/swagger-ui/**`, `/v3/api-docs/**`, `/webjars/**` to security permit list |
+| `/api/auth/me` returned INTERNAL_ERROR when called without token | Spring Security was passing anonymous users through `authenticated()` — changed to `hasRole("USER")` + added null check in controller |
+| JWT_SECRET too short | Required min 32 chars for HMAC-SHA512 — updated `.env` |
+| `AuthenticationEntryPoint` not configured | Added inline JSON 401/403 handlers to `SecurityConfig` |
+
+#### Deliverable verified
+```powershell
+# Register
+Invoke-RestMethod -Method POST -Uri "http://localhost:8081/api/auth/register" `
+  -ContentType "application/json" `
+  -Body '{"email":"test@example.com","password":"password123","displayName":"Test User"}'
+# → returns accessToken, refreshToken, user object ✅
+
+# Login
+$response = Invoke-RestMethod -Method POST -Uri "http://localhost:8081/api/auth/login" `
+  -ContentType "application/json" `
+  -Body '{"email":"test@example.com","password":"password123"}'
+
+# Protected endpoint
+$token = $response.data.accessToken
+Invoke-RestMethod -Method GET -Uri "http://localhost:8081/api/auth/me" `
+  -Headers @{Authorization="Bearer $token"}
+# → returns user profile ✅
+
+# Frontend
+# http://localhost:3000/register → fill form → redirects to dashboard ✅
+# http://localhost:3000/login    → fill form → redirects to dashboard ✅
+# Sign out → back to login ✅
+```
+
+---
+
+## 🔲 Phases Yet to Come
+
+### Phase 3 — Core Notes CRUD ← NEXT
+**Goal:** The actual note-taking functionality. This is the heart of the app.
+
+What we'll build:
+- **Backend:** 10 REST endpoints — list, create, get, update, delete, pin, archive, label assignment
+- **Frontend:** Masonry grid layout, note cards with hover actions, Tiptap rich text editor modal, color picker, labels sidebar, pinned notes section, real-time search, empty states
+- **New migration:** Labels table already exists from V1 — just need the JPA entities and repositories
+
+Key visual targets:
+- Pinterest-style masonry grid (not uniform rows)
+- Card hover reveals action icons (delete, archive, color, label, duplicate)
+- Smooth animations: card lift on hover, fade out on delete, slide in on create
+- Pinned notes shown above main grid with divider
+- Empty state illustrations
+
+---
+
+### Phase 4 — Image Attachments
+- Upload images to Cloudflare R2
+- Drag-and-drop + paste into note editor
+- Image thumbnail strip on note cards
+- Lightbox view
+
+---
+
+### Phase 5 — Checklist Notes
+- Note type toggle: text vs checklist
+- Drag-to-reorder checklist items
+- Checked items move to bottom with strikethrough
+- Progress bar on card (X/Y complete)
+
+---
+
+### Phase 6 — Version History
+- Every save snapshots the note
+- Side panel with version timeline
+- Diff view: additions in green, deletions in red
+- One-click restore
+
+---
+
+### Phase 7 — AI Note Assistant
+- Summarize, suggest tags, expand, fix grammar
+- Semantic search using pgvector + Gemini embeddings
+- Rate limiting: 10 AI requests/user/hour via Redis counter
+- Demo mode for unauthenticated visitors (mock responses)
+- Requires: `GEMINI_API_KEY` from https://aistudio.google.com/app/apikey
+
+---
+
+### Phase 8 — Live Collaboration
+- Share note with another user by email
+- WebSocket (STOMP) — edits broadcast in real time
+- Colored cursors showing where each user is typing
+- Presence avatars in editor header
+
+---
+
+### Phase 9 — Canvas Mode
+- Infinite whiteboard using tldraw or custom pan/zoom
+- Notes as draggable sticky cards
+- Positions persist in DB
+- Minimap, zoom, fit-all button
+
+---
+
+### Phase 10 — Mood-Aware Colors
+- Sentiment analysis via Gemini (async, doesn't block save)
+- Card color shifts based on mood: positive=warm yellow, excited=orange, anxious=blue-purple, negative=cool gray
+- User toggle in settings (off by default)
+- Manual color override always wins
+
+---
+
+### Phase 11 — Landing Page + Public API
+- Recruiter-facing landing page at `/`
+- Demo account with pre-loaded sample notes
+- Full Swagger UI at `/swagger-ui/index.html`
+- `/api/health` and `/api/stats` public endpoints
+- Tech stack section, GitHub link, feature highlights
+
+---
+
+### Phase 12 — Deployment
+- Dockerfiles for both frontend and backend
+- **Vercel** → Next.js frontend (free, auto-deploys from `main`)
+- **Render** → Spring Boot backend (free 750h/month, cold starts after 15min idle)
+- **Supabase** → PostgreSQL with pgvector enabled
+- **Upstash** → Redis (10k commands/day free)
+- **Cloudflare R2** → image storage (10GB free, no egress fees)
+- GitHub Actions: test on PR, deploy on merge to `main`
+- Full README with architecture diagram, setup steps, live demo link
+
+---
+
+## Git Branch Strategy
+```
+main    ← production, protected
+dev     ← integration (current working branch)
+feat/*  ← feature branches, PR into dev
+```
+
+## Commits so far
+```
+initial project structure
+add auth system: JWT, register, login, refresh, logout
+fix security config and me endpoint null principal handling
+add login, register, and dashboard pages with auth store
+```
