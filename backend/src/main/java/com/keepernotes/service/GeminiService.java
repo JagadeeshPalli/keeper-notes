@@ -44,7 +44,9 @@ public class GeminiService {
             )),
             "generationConfig", Map.of(
                 "temperature", 0.6,
-                "maxOutputTokens", 1024
+                "maxOutputTokens", 1024,
+                // Disable thinking mode for fast responses on simple note tasks
+                "thinkingConfig", Map.of("thinkingBudget", 0)
             )
         );
 
