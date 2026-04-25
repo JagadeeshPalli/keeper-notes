@@ -6,6 +6,8 @@ WORKDIR /app
 # Copy Maven wrapper and pom first (layer cache — only re-downloads deps when pom changes)
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
+# Fix execute permission lost when copied from Windows
+RUN chmod +x mvnw
 RUN ./mvnw dependency:go-offline -q
 
 # Copy source and build the fat JAR (skip tests — CI runs them separately)
