@@ -32,7 +32,8 @@ spring:
       url: ${REDIS_URL:redis://localhost:6379}
 
 server:
-  port: 8081
+  # Render injects PORT at runtime — fall back to 8081 for local dev
+  port: ${PORT:8081}
   error:
     include-message: never
     include-stacktrace: never
