@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Note, NoteImage, NoteRequest, notesApi, colorStyle } from '@/lib/notesApi'
 import ColorPicker from './ColorPicker'
 import ImageLightbox from './ImageLightbox'
+import AiAssistPanel from './AiAssistPanel'
 
 type Props = {
   note: Note | null
@@ -222,6 +223,22 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
               </div>
             )}
           </div>
+
+          {/* AI Assistant panel */}
+          <AiAssistPanel
+            getContent={() => editor?.getHTML() ?? ''}
+            title={title}
+            onApply={(text) => {
+              editor?.commands.clearContent()
+              editor?.commands.insertContent(text)
+            }}
+            onLabels={(labels) => {
+              // Surface suggested labels to the user as a toast-style note
+              // (full label auto-creation would need the labelsApi — kept simple here)
+              navigator.clipboard?.writeText(labels.join(', ')).catch(() => {})
+              alert('Labels copied to clipboard: ' + labels.join(', '))
+            }}
+          />
 
           {/* Toolbar */}
           <div

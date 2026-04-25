@@ -31,6 +31,14 @@ public class User {
 
     private String avatarUrl;
 
+    /** Number of AI requests made using the system (free-tier) key */
+    @Column(nullable = false)
+    private int aiRequestsCount = 0;
+
+    /** User's own Gemini API key — when set, bypasses the free-tier counter */
+    @Column(length = 500)
+    private String aiApiKey;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

@@ -22,8 +22,8 @@ public class AppProperties {
     @Data
     public static class Ai {
         private String geminiApiKey;
-        private int rateLimitRequests = 10;
-        private int rateLimitWindowHours = 1;
+        /** Free-tier request cap per user (lifetime, unless they add their own key) */
+        private int freeRequestLimit = 3;
     }
 
     @Data
