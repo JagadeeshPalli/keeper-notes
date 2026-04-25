@@ -2,6 +2,7 @@ package com.keepernotes.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.keepernotes.config.AppProperties;
 import com.keepernotes.exception.AppException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +19,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GeminiService {
 
-    private static final String GEMINI_URL =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
+    private static final String GEMINI_BASE =
+        "https://generativelanguage.googleapis.com/v1beta/models/";
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final AppProperties appProperties;
 
     /**
      * Sends a prompt to Gemini and returns the text response.
@@ -49,9 +51,13 @@ public class GeminiService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        String model = appProperties.getAi().getGeminiModel();
+        String url = GEMINI_BASE + model + ":generateContent?key=" + apiKey;
+        log.debug("Calling Gemini model: {}", model);
+
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                GEMINI_URL + apiKey,
+                url,
                 HttpMethod.POST,
                 new HttpEntity<>(body, headers),
                 String.class

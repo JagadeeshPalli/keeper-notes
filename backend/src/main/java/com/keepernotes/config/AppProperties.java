@@ -22,6 +22,7 @@ public class AppProperties {
     @Data
     public static class Ai {
         private String geminiApiKey;
+        private String geminiModel = "gemini-2.0-flash";
         /** Free-tier request cap per user (lifetime, unless they add their own key) */
         private int freeRequestLimit = 3;
     }

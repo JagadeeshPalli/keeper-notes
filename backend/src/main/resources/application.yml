@@ -45,6 +45,7 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
   ai:
     gemini-api-key: ${GEMINI_API_KEY:}
+    gemini-model: ${GEMINI_MODEL:gemini-2.0-flash}
     free-request-limit: 3
   storage:
     r2-account-id: ${R2_ACCOUNT_ID:}
