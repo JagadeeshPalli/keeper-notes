@@ -54,7 +54,8 @@ public class AiService {
 
         String plainText = stripHtml(req.getContent());
         String prompt    = buildPrompt(req.getAction(), req.getTitle(), plainText);
-        String result    = geminiService.generate(prompt, apiKey);
+        int    maxTokens = tokenLimitFor(req.getAction());
+        String result    = geminiService.generate(prompt, apiKey, maxTokens);
 
         // Increment counter only when using the system key
         int used = user.getAiRequestsCount();
@@ -90,6 +91,17 @@ public class AiService {
     }
 
     // ── Prompts ───────────────────────────────────────────────────────────────
+
+    /** Per-action output token budgets — keeps responses focused and the UI tidy. */
+    private int tokenLimitFor(String action) {
+        return switch (action) {
+            case "summarize" -> 200;   // 2-3 sentences is plenty
+            case "grammar"   -> 1024;  // may match full note length
+            case "labels"    -> 64;    // just a few comma-separated words
+            case "expand"    -> 800;   // meaningful expansion, not a novel
+            default          -> 512;
+        };
+    }
 
     private String buildPrompt(String action, String title, String text) {
         String context = (title != null && !title.isBlank())

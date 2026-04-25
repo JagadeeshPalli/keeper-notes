@@ -55,11 +55,14 @@ app:
     r2-public-url: ${R2_PUBLIC_URL:}
 
 springdoc:
+  # Default OFF — set SWAGGER_ENABLED=true in local .env only. Never enable in production.
   api-docs:
     path: /v3/api-docs
+    enabled: ${SWAGGER_ENABLED:false}
   swagger-ui:
     path: /swagger-ui.html
-    try-it-out-enabled: true
+    enabled: ${SWAGGER_ENABLED:false}
+    try-it-out-enabled: ${SWAGGER_ENABLED:false}
   show-actuator: false
 
 logging:

@@ -194,8 +194,14 @@ export default function AiAssistPanel({ getContent, title, onApply, onLabels }: 
                     className="rounded-xl p-3 space-y-2.5"
                     style={{ background: 'var(--accent-glow)', border: '1px solid var(--border-hover)' }}
                   >
+                    {/* Result header */}
+                    <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+                      {ACTIONS.find(a => a.id === result.action)?.icon}{' '}
+                      {ACTIONS.find(a => a.id === result.action)?.label} result
+                    </p>
+
                     {result.action === 'labels' ? (
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
                         {result.text.split(',').map(l => l.trim()).filter(Boolean).map(label => (
                           <span
                             key={label}
@@ -207,9 +213,14 @@ export default function AiAssistPanel({ getContent, title, onApply, onLabels }: 
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>
-                        {result.text}
-                      </p>
+                      <div
+                        className="max-h-44 overflow-y-auto pr-1 rounded-lg"
+                        style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--border) transparent' }}
+                      >
+                        <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>
+                          {result.text}
+                        </p>
+                      </div>
                     )}
                     <div className="flex gap-2">
                       <button

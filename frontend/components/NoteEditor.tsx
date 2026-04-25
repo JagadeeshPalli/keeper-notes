@@ -31,7 +31,15 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
   const [uploadingImage, setUploadingImage] = useState(false)
   const [lightboxIndex, setLightboxIndex]   = useState<number | null>(null)
   const [dragOver, setDragOver]       = useState(false)
+  const [toast, setToast]             = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Auto-dismiss toast after 3 s
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 3000)
+    return () => clearTimeout(t)
+  }, [toast])
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -148,11 +156,12 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94 }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
-          className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg rounded-2xl border shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
+          className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg rounded-2xl border shadow-[0_24px_80px_rgba(0,0,0,0.6)] flex flex-col"
           style={{
             ...cs.bg,
             ...cs.border,
-            ...(dragOver ? { boxShadow: '0 0 0 2px var(--accent), 0 24px_80px rgba(0,0,0,0.6)' } : {}),
+            maxHeight: 'min(90vh, 800px)',
+            ...(dragOver ? { boxShadow: '0 0 0 2px var(--accent), 0 24px 80px rgba(0,0,0,0.6)' } : {}),
           }}
           onClick={(e) => e.stopPropagation()}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
@@ -169,7 +178,27 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
             </div>
           )}
 
-          <div className="p-5">
+          {/* ── Toast notification ── */}
+          <AnimatePresence>
+            {toast && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18 }}
+                className="mx-4 mt-3 px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-2"
+                style={{ background: 'var(--accent-glow)', color: 'var(--accent-soft)', border: '1px solid var(--border-hover)' }}
+              >
+                <span>✓</span> {toast}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Scrollable content area ── */}
+          <div
+            className="flex-1 overflow-y-auto p-5 min-h-0"
+            style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--border) transparent' }}
+          >
             {/* Title */}
             <input
               value={title}
@@ -224,78 +253,79 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
             )}
           </div>
 
-          {/* AI Assistant panel */}
-          <AiAssistPanel
-            getContent={() => editor?.getHTML() ?? ''}
-            title={title}
-            onApply={(text) => {
-              editor?.commands.clearContent()
-              editor?.commands.insertContent(text)
-            }}
-            onLabels={(labels) => {
-              // Surface suggested labels to the user as a toast-style note
-              // (full label auto-creation would need the labelsApi — kept simple here)
-              navigator.clipboard?.writeText(labels.join(', ')).catch(() => {})
-              alert('Labels copied to clipboard: ' + labels.join(', '))
-            }}
-          />
+          {/* ── Pinned bottom: AI panel + toolbar ── */}
+          <div className="flex-shrink-0">
+            {/* AI Assistant panel */}
+            <AiAssistPanel
+              getContent={() => editor?.getHTML() ?? ''}
+              title={title}
+              onApply={(text) => {
+                editor?.commands.clearContent()
+                editor?.commands.insertContent(text)
+              }}
+              onLabels={(labels) => {
+                navigator.clipboard?.writeText(labels.join(', ')).catch(() => {})
+                setToast(`Labels copied: ${labels.join(', ')}`)
+              }}
+            />
 
-          {/* Toolbar */}
-          <div
-            className="flex items-center justify-between px-4 py-3 border-t"
-            style={{ borderColor: 'var(--border)' }}
-          >
-            <div className="flex items-center gap-1.5">
-              {/* Color picker */}
-              <div className="relative">
-                <ToolBtn onClick={() => setShowColorPicker((v) => !v)} title="Background color" active={showColorPicker}>🎨</ToolBtn>
-                <AnimatePresence>
-                  {showColorPicker && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 6, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 6, scale: 0.95 }}
-                      className="absolute bottom-11 left-0 rounded-xl shadow-2xl z-20 w-52"
-                      style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-                    >
-                      <ColorPicker value={color} onChange={(c) => { setColor(c); setShowColorPicker(false) }} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+            {/* Toolbar */}
+            <div
+              className="flex items-center justify-between px-4 py-3 border-t"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              <div className="flex items-center gap-1.5">
+                {/* Color picker */}
+                <div className="relative">
+                  <ToolBtn onClick={() => setShowColorPicker((v) => !v)} title="Background color" active={showColorPicker}>🎨</ToolBtn>
+                  <AnimatePresence>
+                    {showColorPicker && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 6, scale: 0.95 }}
+                        className="absolute bottom-11 left-0 rounded-xl shadow-2xl z-20 w-52"
+                        style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+                      >
+                        <ColorPicker value={color} onChange={(c) => { setColor(c); setShowColorPicker(false) }} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Note type toggle */}
+                <ToolBtn
+                  onClick={toggleNoteType}
+                  title={noteType === 'text' ? 'Switch to checklist' : 'Switch to text'}
+                  active={noteType === 'checklist'}
+                >
+                  {noteType === 'checklist' ? '☰' : '☑'}
+                </ToolBtn>
+
+                {/* Bold */}
+                <ToolBtn active={editor?.isActive('bold') ?? false} onClick={() => editor?.chain().focus().toggleBold().run()} title="Bold">
+                  <strong>B</strong>
+                </ToolBtn>
+
+                {/* Italic */}
+                <ToolBtn active={editor?.isActive('italic') ?? false} onClick={() => editor?.chain().focus().toggleItalic().run()} title="Italic">
+                  <em>I</em>
+                </ToolBtn>
+
+                {/* Bullet list */}
+                <ToolBtn active={editor?.isActive('bulletList') ?? false} onClick={() => editor?.chain().focus().toggleBulletList().run()} title="Bullet list">
+                  ≡
+                </ToolBtn>
               </div>
 
-              {/* Note type toggle */}
-              <ToolBtn
-                onClick={toggleNoteType}
-                title={noteType === 'text' ? 'Switch to checklist' : 'Switch to text'}
-                active={noteType === 'checklist'}
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="btn-accent text-xs px-4 py-1.5 rounded-lg disabled:opacity-50"
               >
-                {noteType === 'checklist' ? '☰' : '☑'}
-              </ToolBtn>
-
-              {/* Bold */}
-              <ToolBtn active={editor?.isActive('bold') ?? false} onClick={() => editor?.chain().focus().toggleBold().run()} title="Bold">
-                <strong>B</strong>
-              </ToolBtn>
-
-              {/* Italic */}
-              <ToolBtn active={editor?.isActive('italic') ?? false} onClick={() => editor?.chain().focus().toggleItalic().run()} title="Italic">
-                <em>I</em>
-              </ToolBtn>
-
-              {/* Bullet list */}
-              <ToolBtn active={editor?.isActive('bulletList') ?? false} onClick={() => editor?.chain().focus().toggleBulletList().run()} title="Bullet list">
-                ≡
-              </ToolBtn>
+                {saving ? 'Saving…' : 'Close'}
+              </button>
             </div>
-
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="btn-accent text-xs px-4 py-1.5 rounded-lg disabled:opacity-50"
-            >
-              {saving ? 'Saving…' : 'Close'}
-            </button>
           </div>
         </motion.div>
       </AnimatePresence>

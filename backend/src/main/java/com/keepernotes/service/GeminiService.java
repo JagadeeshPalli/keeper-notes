@@ -29,11 +29,12 @@ public class GeminiService {
     /**
      * Sends a prompt to Gemini and returns the text response.
      *
-     * @param prompt  The full prompt to send
-     * @param apiKey  The Gemini API key to use (system or user-supplied)
+     * @param prompt     The full prompt to send
+     * @param apiKey     The Gemini API key to use (system or user-supplied)
+     * @param maxTokens  Maximum output tokens for this request
      * @return The generated text
      */
-    public String generate(String prompt, String apiKey) {
+    public String generate(String prompt, String apiKey, int maxTokens) {
         if (apiKey == null || apiKey.isBlank()) {
             throw new AppException("AI_NOT_CONFIGURED", "AI is not configured. Please add your Gemini API key.", HttpStatus.SERVICE_UNAVAILABLE);
         }
@@ -44,7 +45,7 @@ public class GeminiService {
             )),
             "generationConfig", Map.of(
                 "temperature", 0.6,
-                "maxOutputTokens", 1024,
+                "maxOutputTokens", maxTokens,
                 // Disable thinking mode for fast responses on simple note tasks
                 "thinkingConfig", Map.of("thinkingBudget", 0)
             )
@@ -87,5 +88,10 @@ public class GeminiService {
             log.error("Unexpected Gemini error", e);
             throw new AppException("AI_ERROR", "AI request failed. Please try again.", HttpStatus.BAD_GATEWAY);
         }
+    }
+
+    /** Convenience overload with default 512-token cap (e.g. for API key validation). */
+    public String generate(String prompt, String apiKey) {
+        return generate(prompt, apiKey, 512);
     }
 }

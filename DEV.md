@@ -58,6 +58,9 @@ Then open **http://localhost:37777** in your browser.
 
 > ⚠️ Must start **after Docker** — Spring Boot crashes if PostgreSQL isn't ready.
 
+> ⚠️ **Swagger** is enabled locally via `SWAGGER_ENABLED=true` in `backend/.env`.
+> It is **off by default** in production. Never set this to `true` on Render.
+
 ---
 
 ## 4. Frontend (VS Code)
@@ -80,7 +83,8 @@ Open **http://localhost:3000** in your browser.
 
 | Service       | URL                                    | Start command / tool          |
 |---------------|----------------------------------------|-------------------------------|
-| Frontend      | http://localhost:3000                  | `npm run dev` (in /frontend)  |
+| Landing page  | http://localhost:3000                  | `npm run dev` (in /frontend)  |
+| Dashboard     | http://localhost:3000/dashboard        | (login first)                 |
 | Backend       | http://localhost:8081                  | IntelliJ ▶ Run                |
 | Swagger UI    | http://localhost:8081/swagger-ui       | (backend must be running)     |
 | pgAdmin       | http://localhost:5050                  | Docker                        |
@@ -91,9 +95,9 @@ Open **http://localhost:3000** in your browser.
 - **Password:** see `docker-compose.yml` → `PGADMIN_DEFAULT_PASSWORD`
 
 ### DB connection (inside pgAdmin)
-- **Host:** `db`  
-- **Port:** `5432`  
-- **Database:** `keepernotes`  
+- **Host:** `db`
+- **Port:** `5432`
+- **Database:** `keepernotes`
 - **Username/Password:** see `backend/.env`
 
 ---
@@ -108,3 +112,20 @@ Open **http://localhost:3000** in your browser.
 | Frontend: `Module not found` | `node_modules` was cleaned | Run `npm install` then `npm run dev` |
 | claude-mem: `Failed to start worker` | Stale PID files from last shutdown | Run the Step 2 command above |
 | Docker containers not starting | Docker daemon still loading | Wait 30s after Docker Desktop opens |
+| Swagger 404 in production | `SWAGGER_ENABLED` not set to `true` | Only enable locally — never in prod |
+
+---
+
+## Before deploying — pre-flight checklist
+
+Run through this before every production deployment:
+
+- [ ] `SWAGGER_ENABLED` is **not** set (or set to `false`) in the hosting env vars
+- [ ] `JWT_SECRET` is a random 32+ char string (not the dev placeholder)
+- [ ] `FRONTEND_URL` points to the real Vercel URL (for CORS)
+- [ ] `GEMINI_API_KEY` is set (for the system-level free AI credits)
+- [ ] `R2_*` vars are set (for image uploads)
+- [ ] `DATABASE_URL` points to Neon (not localhost)
+- [ ] `REDIS_URL` points to Upstash (not localhost)
+- [ ] `NEXT_PUBLIC_API_URL` in Vercel env vars points to the Render backend URL
+- [ ] Run `npm run build` locally — zero errors before pushing

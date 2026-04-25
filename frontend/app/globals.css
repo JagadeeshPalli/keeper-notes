@@ -3,6 +3,7 @@
 /* ── Light theme (default) ─────────────────────────────────────── */
 :root {
   --bg-root:     #f5f4ff;
+  --nav-glass:   rgba(245,244,255,0.80);
   --bg-surface:  #ffffff;
   --bg-elevated: #eeecff;
   --accent:      #7c3aed;
@@ -32,6 +33,7 @@
 /* ── Dark theme ────────────────────────────────────────────────── */
 .dark {
   --bg-root:     #07070f;
+  --nav-glass:   rgba(7,7,15,0.80);
   --bg-surface:  #0d0c1a;
   --bg-elevated: #111024;
   --accent:      #8b5cf6;
@@ -58,6 +60,8 @@
 }
 
 /* ── Base ───────────────────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+
 body {
   background: var(--bg-root);
   color: var(--text-primary);

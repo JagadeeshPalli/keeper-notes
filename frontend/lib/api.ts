@@ -14,19 +14,79 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// On 401, clear tokens and redirect — but NOT for auth endpoints themselves
-// (a failed login attempt also returns 401; we want the form to show the error)
+// ── Token refresh queue ─────────────────────────────────────────────────────
+// When an access token expires, multiple concurrent requests can all get 401.
+// We queue them and replay them all once a single refresh succeeds.
+let isRefreshing = false
+let failedQueue: { resolve: (token: string) => void; reject: (err: unknown) => void }[] = []
+
+function processQueue(error: unknown, token: string | null = null) {
+  failedQueue.forEach(p => error ? p.reject(error) : p.resolve(token!))
+  failedQueue = []
+}
+
+function clearSessionAndRedirect() {
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  window.location.href = '/login'
+}
+
+// On 401:
+// 1. If it's an auth endpoint (login / register / refresh), let the form handle it.
+// 2. Otherwise, attempt a silent token refresh first.
+//    Success → replay the failed request with the new token.
+//    Failure → clear session and redirect to /login.
 api.interceptors.response.use(
   (res) => res,
-  (error) => {
-    const url: string = error.config?.url ?? ''
+  async (error) => {
+    const originalRequest = error.config
+    const url: string = originalRequest?.url ?? ''
     const isAuthEndpoint = url.includes('/api/auth/')
-    if (error.response?.status === 401 && !isAuthEndpoint) {
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      window.location.href = '/login'
+
+    if (error.response?.status !== 401 || isAuthEndpoint || originalRequest._retry) {
+      return Promise.reject(error)
     }
-    return Promise.reject(error)
+
+    // If a refresh is already in flight, queue this request until it resolves
+    if (isRefreshing) {
+      return new Promise<string>((resolve, reject) => {
+        failedQueue.push({ resolve, reject })
+      }).then(token => {
+        originalRequest.headers.Authorization = `Bearer ${token}`
+        return api(originalRequest)
+      })
+    }
+
+    originalRequest._retry = true
+    isRefreshing = true
+
+    const refreshToken = localStorage.getItem('refreshToken')
+    if (!refreshToken) {
+      isRefreshing = false
+      clearSessionAndRedirect()
+      return Promise.reject(error)
+    }
+
+    try {
+      // Use a plain axios call to avoid triggering this interceptor again
+      const res = await api.post<ApiResponse<AuthResponse>>(
+        '/api/auth/refresh',
+        { refreshToken },
+      )
+      const { accessToken, refreshToken: newRefresh } = res.data.data
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', newRefresh)
+      api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
+      processQueue(null, accessToken)
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`
+      return api(originalRequest)
+    } catch (refreshError) {
+      processQueue(refreshError, null)
+      clearSessionAndRedirect()
+      return Promise.reject(refreshError)
+    } finally {
+      isRefreshing = false
+    }
   }
 )
 
