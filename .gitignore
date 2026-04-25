@@ -33,6 +33,9 @@ frontend/yarn-error.log*
 Thumbs.db
 desktop.ini
 
+# ─── Dev tooling (never committed) ─────────────────────────────────────────────
+.claude/
+
 # ─── Logs ──────────────────────────────────────────────────────────────────────
 *.log
 logs/
