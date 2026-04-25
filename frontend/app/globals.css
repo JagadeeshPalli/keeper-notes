@@ -1,43 +1,115 @@
 @import "tailwindcss";
 
+/* ── Obsidian Violet theme ─────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-root:     #07070f;
+  --bg-surface:  #0d0c1a;
+  --bg-elevated: #111024;
+  --accent:      #8b5cf6;
+  --accent-soft: #a78bfa;
+  --accent-glow: rgba(139, 92, 246, 0.22);
+  --border:      rgba(139, 92, 246, 0.14);
+  --border-hover:rgba(139, 92, 246, 0.32);
+  --text-primary:  #ede9ff;
+  --text-secondary:#9492b5;
+  --text-muted:    #4d4b6a;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ── Base ───────────────────────────────────────────────────────── */
 body {
-  background: #0f0f0f;
-  color: var(--foreground);
+  background: var(--bg-root);
+  color: var(--text-primary);
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Tiptap editor placeholder */
+/* ── Custom scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.28);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.50); }
+
+/* ── Tiptap editor ──────────────────────────────────────────────── */
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: #52525b;
+  color: var(--text-muted);
   pointer-events: none;
   float: left;
   height: 0;
 }
 
-/* Tiptap prose styles */
-.tiptap ul { list-style: disc; padding-left: 1.25rem; }
-.tiptap ol { list-style: decimal; padding-left: 1.25rem; }
-.tiptap strong { font-weight: 600; }
-.tiptap em { font-style: italic; }
-.tiptap p { margin: 0 0 0.5rem 0; }
+.tiptap ul          { list-style: disc;    padding-left: 1.25rem; }
+.tiptap ol          { list-style: decimal; padding-left: 1.25rem; }
+.tiptap strong      { font-weight: 600; }
+.tiptap em          { font-style: italic; }
+.tiptap p           { margin: 0 0 0.4rem 0; }
 .tiptap p:last-child { margin-bottom: 0; }
+
+/* ── TaskList / checklist ───────────────────────────────────────── */
+.tiptap ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+.tiptap ul[data-type="taskList"] li[data-type="taskItem"] {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+.tiptap ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+}
+.tiptap ul[data-type="taskList"] li > label input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+.tiptap ul[data-type="taskList"] li[data-checked="true"] > div > p {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+.tiptap ul[data-type="taskList"] li > div { flex: 1; }
+
+/* ── Animated background blobs (for auth pages) ─────────────────── */
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(20px, -30px) scale(1.05); }
+  66%       { transform: translate(-15px, 20px) scale(0.97); }
+}
+.animate-blob { animation: blob-drift 8s ease-in-out infinite; }
+.animation-delay-2000 { animation-delay: 2s; }
+.animation-delay-4000 { animation-delay: 4s; }
+
+/* ── Glow button ────────────────────────────────────────────────── */
+.btn-violet {
+  background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+  color: #fff;
+  font-weight: 600;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
+}
+.btn-violet:hover {
+  background: linear-gradient(135deg, #6d28d9, #7c3aed);
+  box-shadow: 0 6px 28px rgba(139, 92, 246, 0.50);
+  transform: translateY(-1px);
+}
+.btn-violet:disabled {
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ── Glass card ─────────────────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+}

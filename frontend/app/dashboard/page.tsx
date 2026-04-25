@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useAuthStore } from '@/store/authStore'
 import { Note, Label, notesApi, labelsApi } from '@/lib/notesApi'
 import NoteCard from '@/components/NoteCard'
@@ -17,19 +17,17 @@ export default function DashboardPage() {
   const [search, setSearch] = useState('')
   const [activeLabelId, setActiveLabelId] = useState<string | null>(null)
   const [showArchived, setShowArchived] = useState(false)
-  const [editingNote, setEditingNote] = useState<Note | null | 'new'>('new' as never)
+  const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [editorOpen, setEditorOpen] = useState(false)
   const [notesLoading, setNotesLoading] = useState(true)
   const [newLabelName, setNewLabelName] = useState('')
   const [addingLabel, setAddingLabel] = useState(false)
 
-  // Auth guard
   useEffect(() => { loadUser() }, [loadUser])
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.push('/login')
   }, [isLoading, isAuthenticated, router])
 
-  // Fetch notes
   const fetchNotes = useCallback(async () => {
     setNotesLoading(true)
     try {
@@ -45,38 +43,24 @@ export default function DashboardPage() {
     }
   }, [search, activeLabelId, showArchived])
 
-  useEffect(() => {
-    if (isAuthenticated) fetchNotes()
-  }, [isAuthenticated, fetchNotes])
+  useEffect(() => { if (isAuthenticated) fetchNotes() }, [isAuthenticated, fetchNotes])
 
-  // Fetch labels
   useEffect(() => {
-    if (isAuthenticated) {
-      labelsApi.list().then((res) => setLabels(res.data.data))
-    }
+    if (isAuthenticated) labelsApi.list().then((r) => setLabels(r.data.data))
   }, [isAuthenticated])
 
-  // Debounced search
   useEffect(() => {
     const t = setTimeout(() => { if (isAuthenticated) fetchNotes() }, 300)
     return () => clearTimeout(t)
   }, [search, isAuthenticated, fetchNotes])
 
-  function openNew() {
-    setEditingNote(null)
-    setEditorOpen(true)
-  }
-
-  function openEdit(note: Note) {
-    setEditingNote(note)
-    setEditorOpen(true)
-  }
+  function openNew() { setEditingNote(null); setEditorOpen(true) }
+  function openEdit(note: Note) { setEditingNote(note); setEditorOpen(true) }
 
   function handleSave(saved: Note) {
     setNotes((prev) => {
       const exists = prev.find((n) => n.id === saved.id)
-      if (exists) return prev.map((n) => (n.id === saved.id ? saved : n))
-      return [saved, ...prev]
+      return exists ? prev.map((n) => (n.id === saved.id ? saved : n)) : [saved, ...prev]
     })
   }
 
@@ -98,38 +82,54 @@ export default function DashboardPage() {
     router.push('/login')
   }
 
-  const pinnedNotes = notes.filter((n) => n.pinned)
+  const pinnedNotes   = notes.filter((n) => n.pinned)
   const unpinnedNotes = notes.filter((n) => !n.pinned)
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#07070f] flex items-center justify-center">
+        <div className="w-7 h-7 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white flex flex-col">
-      {/* ── Top bar ──────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-30 border-b border-zinc-800 bg-[#0f0f0f]/95 backdrop-blur px-4 py-3 flex items-center gap-3">
-        <h1 className="text-base font-semibold tracking-tight shrink-0">Keeper Notes</h1>
+    <div className="min-h-screen bg-[#07070f] text-[#ede9ff] flex flex-col">
+
+      {/* ── Header ─────────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-30 border-b border-violet-900/20 bg-[#07070f]/80 backdrop-blur-xl px-5 py-3 flex items-center gap-4">
+        {/* Brand */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-violet-600/25 border border-violet-500/30 flex items-center justify-center text-sm shadow-[0_0_12px_rgba(139,92,246,0.3)]">
+            📝
+          </div>
+          <h1 className="text-sm font-bold tracking-tight bg-gradient-to-r from-violet-300 to-purple-300 bg-clip-text text-transparent">
+            Keeper Notes
+          </h1>
+        </div>
 
         {/* Search */}
-        <div className="flex-1 max-w-xl mx-auto">
+        <div className="flex-1 max-w-xl mx-auto relative">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4d4b6a] text-sm pointer-events-none">🔍</span>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search notes…"
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/40 transition"
+            className="w-full bg-white/[0.04] border border-violet-900/25 rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#ede9ff] placeholder-[#4d4b6a] focus:outline-none focus:ring-2 focus:ring-violet-500/35 focus:border-violet-500/40 transition-all"
           />
         </div>
 
+        {/* User */}
         <div className="flex items-center gap-3 shrink-0">
-          <span className="text-xs text-zinc-500 hidden sm:block">{user?.displayName}</span>
+          <div className="hidden sm:flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-violet-600/30 border border-violet-500/30 flex items-center justify-center text-xs font-semibold text-violet-300">
+              {user?.displayName?.[0]?.toUpperCase() ?? '?'}
+            </div>
+            <span className="text-xs text-[#9492b5]">{user?.displayName}</span>
+          </div>
           <button
             onClick={handleLogout}
-            className="text-xs text-zinc-500 hover:text-white transition"
+            className="text-xs text-[#4d4b6a] hover:text-[#ede9ff] px-3 py-1.5 rounded-lg hover:bg-white/[0.05] transition-all"
           >
             Sign out
           </button>
@@ -137,99 +137,103 @@ export default function DashboardPage() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
+
         {/* ── Sidebar ──────────────────────────────────────────────── */}
-        <aside className="w-56 shrink-0 border-r border-zinc-800 p-3 flex flex-col gap-1 overflow-y-auto">
+        <aside className="w-56 shrink-0 border-r border-violet-900/15 p-3 flex flex-col gap-0.5 overflow-y-auto bg-[#07070f]">
           <NavItem
             active={!showArchived && !activeLabelId}
             onClick={() => { setShowArchived(false); setActiveLabelId(null) }}
+            icon="📝"
           >
-            📝 Notes
+            Notes
           </NavItem>
           <NavItem
             active={showArchived}
             onClick={() => { setShowArchived(true); setActiveLabelId(null) }}
+            icon="🗂️"
           >
-            🗂️ Archive
+            Archive
           </NavItem>
 
-          <div className="mt-3 mb-1 px-3 flex items-center justify-between">
-            <span className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">Labels</span>
+          <div className="mt-4 mb-1.5 px-3 flex items-center justify-between">
+            <span className="text-[9px] font-bold text-[#3d3b58] uppercase tracking-[0.12em]">Labels</span>
             <button
               onClick={() => setAddingLabel(true)}
-              className="text-zinc-500 hover:text-white transition text-lg leading-none"
+              className="w-5 h-5 flex items-center justify-center text-[#4d4b6a] hover:text-violet-400 hover:bg-violet-600/10 rounded transition-all text-base leading-none"
               title="New label"
             >+</button>
           </div>
 
-          {addingLabel && (
-            <form onSubmit={handleCreateLabel} className="px-2 mb-1">
-              <input
-                autoFocus
-                value={newLabelName}
-                onChange={(e) => setNewLabelName(e.target.value)}
-                onBlur={() => { if (!newLabelName) setAddingLabel(false) }}
-                placeholder="Label name"
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-yellow-400/40"
-              />
-            </form>
-          )}
+          <AnimatePresence>
+            {addingLabel && (
+              <motion.form
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                onSubmit={handleCreateLabel}
+                className="px-2 mb-1 overflow-hidden"
+              >
+                <input
+                  autoFocus
+                  value={newLabelName}
+                  onChange={(e) => setNewLabelName(e.target.value)}
+                  onBlur={() => { if (!newLabelName) setAddingLabel(false) }}
+                  placeholder="Label name"
+                  className="w-full bg-white/[0.04] border border-violet-900/30 rounded-lg px-3 py-2 text-xs text-[#ede9ff] placeholder-[#4d4b6a] focus:outline-none focus:ring-1 focus:ring-violet-500/40"
+                />
+              </motion.form>
+            )}
+          </AnimatePresence>
 
           {labels.map((l) => (
             <NavItem
               key={l.id}
               active={activeLabelId === l.id}
               onClick={() => { setActiveLabelId(l.id); setShowArchived(false) }}
+              icon="🏷️"
             >
-              🏷️ {l.name}
+              {l.name}
             </NavItem>
           ))}
         </aside>
 
-        {/* ── Main content ─────────────────────────────────────────── */}
+        {/* ── Main ─────────────────────────────────────────────────── */}
         <main className="flex-1 overflow-y-auto p-6">
+
           {/* New note bar */}
           {!showArchived && (
-            <div
+            <motion.div
               onClick={openNew}
-              className="w-full max-w-2xl mx-auto mb-8 bg-[#1a1a1a] border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-600 cursor-text hover:border-zinc-500 transition shadow"
+              whileHover={{ scale: 1.005 }}
+              whileTap={{ scale: 0.998 }}
+              className="w-full max-w-2xl mx-auto mb-8 glass rounded-2xl px-5 py-3.5 text-sm text-[#4d4b6a] cursor-text
+                hover:bg-violet-600/[0.06] hover:border-violet-500/30 hover:text-violet-400/60
+                hover:shadow-[0_4px_24px_rgba(139,92,246,0.12)]
+                transition-all duration-200 select-none"
             >
               Take a note…
-            </div>
+            </motion.div>
           )}
 
           {notesLoading ? (
-            <div className="flex justify-center py-20">
-              <div className="w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+            <div className="flex justify-center py-24">
+              <div className="w-7 h-7 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : notes.length === 0 ? (
             <EmptyState search={search} archived={showArchived} />
           ) : (
             <>
-              {/* Pinned */}
               {pinnedNotes.length > 0 && (
-                <section className="mb-6">
-                  <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-3 px-1">Pinned</p>
-                  <MasonryGrid
-                    notes={pinnedNotes}
-                    onEdit={openEdit}
-                    onUpdate={handleSave}
-                    onDelete={handleDelete}
-                  />
+                <section className="mb-8 max-w-5xl mx-auto">
+                  <SectionLabel>📌 Pinned</SectionLabel>
+                  <MasonryGrid notes={pinnedNotes} onEdit={openEdit} onUpdate={handleSave} onDelete={handleDelete} />
                 </section>
               )}
 
-              {/* Other */}
               {unpinnedNotes.length > 0 && (
-                <section>
-                  {pinnedNotes.length > 0 && (
-                    <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-3 px-1">Other</p>
-                  )}
-                  <MasonryGrid
-                    notes={unpinnedNotes}
-                    onEdit={openEdit}
-                    onUpdate={handleSave}
-                    onDelete={handleDelete}
-                  />
+                <section className="max-w-5xl mx-auto">
+                  {pinnedNotes.length > 0 && <SectionLabel>Other</SectionLabel>}
+                  <MasonryGrid notes={unpinnedNotes} onEdit={openEdit} onUpdate={handleSave} onDelete={handleDelete} />
                 </section>
               )}
             </>
@@ -241,7 +245,7 @@ export default function DashboardPage() {
       <AnimatePresence>
         {editorOpen && (
           <NoteEditor
-            note={editingNote as Note | null}
+            note={editingNote}
             onClose={() => setEditorOpen(false)}
             onSave={handleSave}
           />
@@ -251,7 +255,7 @@ export default function DashboardPage() {
   )
 }
 
-// ── Sub-components ──────────────────────────────────────────────────────────
+/* ── Sub-components ──────────────────────────────────────────────── */
 
 function MasonryGrid({ notes, onEdit, onUpdate, onDelete }: {
   notes: Note[]
@@ -276,35 +280,51 @@ function MasonryGrid({ notes, onEdit, onUpdate, onDelete }: {
   )
 }
 
-function NavItem({ children, active, onClick }: {
+function NavItem({ children, active, onClick, icon }: {
   children: React.ReactNode
   active: boolean
   onClick: () => void
+  icon: string
 }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left text-sm px-3 py-2 rounded-xl transition ${
+      className={`w-full text-left text-xs px-3 py-2.5 rounded-xl transition-all duration-150 flex items-center gap-2.5 font-medium ${
         active
-          ? 'bg-yellow-400/15 text-yellow-400 font-medium'
-          : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
+          ? 'bg-violet-600/15 text-violet-300 border border-violet-500/20 shadow-[0_0_12px_rgba(139,92,246,0.1)]'
+          : 'text-[#9492b5] hover:bg-white/[0.04] hover:text-[#ede9ff] border border-transparent'
       }`}
     >
+      <span className="text-sm">{icon}</span>
       {children}
     </button>
   )
 }
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[10px] font-bold text-[#4d4b6a] uppercase tracking-[0.12em] mb-3 px-1">
+      {children}
+    </p>
+  )
+}
+
 function EmptyState({ search, archived }: { search: string; archived: boolean }) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
-      <div className="text-5xl mb-4">{archived ? '🗂️' : search ? '🔍' : '📝'}</div>
-      <p className="text-zinc-400 font-medium">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col items-center justify-center py-28 text-center"
+    >
+      <div className="w-20 h-20 rounded-2xl bg-violet-600/10 border border-violet-500/15 flex items-center justify-center text-4xl mb-5 shadow-[0_0_30px_rgba(139,92,246,0.1)]">
+        {archived ? '🗂️' : search ? '🔍' : '📝'}
+      </div>
+      <p className="text-[#9492b5] font-semibold text-base">
         {archived ? 'No archived notes' : search ? `No results for "${search}"` : 'No notes yet'}
       </p>
-      <p className="text-zinc-600 text-sm mt-1">
-        {archived ? 'Archived notes will appear here' : search ? 'Try a different search' : 'Click above to create your first note'}
+      <p className="text-[#4d4b6a] text-sm mt-1.5">
+        {archived ? 'Archived notes appear here' : search ? 'Try a different search term' : 'Click above to create your first note'}
       </p>
-    </div>
+    </motion.div>
   )
 }

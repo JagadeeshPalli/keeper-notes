@@ -36,17 +36,17 @@ export type NoteRequest = {
   labelIds?: string[]
 }
 
-export const NOTE_COLORS: { id: string; bg: string; border: string }[] = [
-  { id: 'default', bg: 'bg-[#1a1a1a]',    border: 'border-zinc-700' },
-  { id: 'red',     bg: 'bg-red-950',       border: 'border-red-800' },
-  { id: 'orange',  bg: 'bg-orange-950',    border: 'border-orange-800' },
-  { id: 'yellow',  bg: 'bg-yellow-950',    border: 'border-yellow-800' },
-  { id: 'green',   bg: 'bg-green-950',     border: 'border-green-800' },
-  { id: 'teal',    bg: 'bg-teal-950',      border: 'border-teal-800' },
-  { id: 'blue',    bg: 'bg-blue-950',      border: 'border-blue-800' },
-  { id: 'purple',  bg: 'bg-purple-950',    border: 'border-purple-800' },
-  { id: 'pink',    bg: 'bg-pink-950',      border: 'border-pink-800' },
-  { id: 'brown',   bg: 'bg-stone-900',     border: 'border-stone-700' },
+export const NOTE_COLORS: { id: string; bg: string; border: string; swatch: string }[] = [
+  { id: 'default', bg: 'bg-[#0d0c1a]',  border: 'border-violet-900/25', swatch: 'bg-violet-500' },
+  { id: 'red',     bg: 'bg-[#160808]',  border: 'border-red-900/40',    swatch: 'bg-red-500'    },
+  { id: 'orange',  bg: 'bg-[#160d06]',  border: 'border-orange-900/40', swatch: 'bg-orange-500' },
+  { id: 'yellow',  bg: 'bg-[#151008]',  border: 'border-yellow-900/40', swatch: 'bg-yellow-400' },
+  { id: 'green',   bg: 'bg-[#081408]',  border: 'border-green-900/40',  swatch: 'bg-green-500'  },
+  { id: 'teal',    bg: 'bg-[#061412]',  border: 'border-teal-900/40',   swatch: 'bg-teal-400'   },
+  { id: 'blue',    bg: 'bg-[#070912]',  border: 'border-blue-900/40',   swatch: 'bg-blue-500'   },
+  { id: 'purple',  bg: 'bg-[#0f0818]',  border: 'border-purple-900/40', swatch: 'bg-purple-500' },
+  { id: 'pink',    bg: 'bg-[#160818]',  border: 'border-pink-900/40',   swatch: 'bg-pink-500'   },
+  { id: 'brown',   bg: 'bg-[#140e0a]',  border: 'border-stone-800/40',  swatch: 'bg-stone-500'  },
 ]
 
 export function colorStyle(colorId: string) {
