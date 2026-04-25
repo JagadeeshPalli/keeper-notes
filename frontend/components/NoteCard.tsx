@@ -123,15 +123,17 @@ export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
         </div>
       )}
 
-      {/* Lightbox */}
-      {lightboxIndex !== null && note.images && note.images.length > 0 && (
-        <ImageLightbox
-          images={note.images}
-          index={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
-          onNavigate={setLightboxIndex}
-        />
-      )}
+      {/* Lightbox — portalled to document.body via AnimatePresence */}
+      <AnimatePresence>
+        {lightboxIndex !== null && note.images && note.images.length > 0 && (
+          <ImageLightbox
+            images={note.images}
+            index={lightboxIndex}
+            onClose={() => setLightboxIndex(null)}
+            onNavigate={setLightboxIndex}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Hover action bar */}
       <AnimatePresence>

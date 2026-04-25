@@ -252,15 +252,17 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Lightbox */}
-      {lightboxIndex !== null && images.length > 0 && (
-        <ImageLightbox
-          images={images}
-          index={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
-          onNavigate={setLightboxIndex}
-        />
-      )}
+      {/* Lightbox — portalled to document.body via AnimatePresence */}
+      <AnimatePresence>
+        {lightboxIndex !== null && images.length > 0 && (
+          <ImageLightbox
+            images={images}
+            index={lightboxIndex}
+            onClose={() => setLightboxIndex(null)}
+            onNavigate={setLightboxIndex}
+          />
+        )}
+      </AnimatePresence>
     </>
   )
 }
