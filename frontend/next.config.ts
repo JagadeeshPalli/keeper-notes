@@ -12,6 +12,10 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  // Produces a self-contained server bundle in .next/standalone
+  // Required for the frontend Dockerfile. Vercel ignores this — it uses its own pipeline.
+  output: "standalone",
+
   async headers() {
     return [
       {
