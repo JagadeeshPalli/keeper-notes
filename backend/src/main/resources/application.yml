@@ -22,22 +22,18 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+
   data:
     redis:
       url: ${REDIS_URL:redis://localhost:6379}
 
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
-            scope: openid, email, profile
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-
 server:
-  port: 8080
+  # Render injects PORT at runtime — fall back to 8081 for local dev
+  port: ${PORT:8081}
   error:
     include-message: never
     include-stacktrace: never
@@ -50,19 +46,24 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
   ai:
     gemini-api-key: ${GEMINI_API_KEY:}
-    rate-limit-requests: 10
-    rate-limit-window-hours: 1
+    gemini-model: ${GEMINI_MODEL:gemini-2.5-flash}
+    free-request-limit: 3
   storage:
     r2-account-id: ${R2_ACCOUNT_ID:}
     r2-access-key: ${R2_ACCESS_KEY:}
     r2-secret-key: ${R2_SECRET_KEY:}
     r2-bucket-name: ${R2_BUCKET_NAME:keepernotes-files}
+    r2-public-url: ${R2_PUBLIC_URL:}
 
 springdoc:
+  # Default OFF — set SWAGGER_ENABLED=true in local .env only. Never enable in production.
   api-docs:
-    path: /api/docs/json
+    path: /v3/api-docs
+    enabled: ${SWAGGER_ENABLED:false}
   swagger-ui:
-    path: /api/docs
+    path: /swagger-ui.html
+    enabled: ${SWAGGER_ENABLED:false}
+    try-it-out-enabled: ${SWAGGER_ENABLED:false}
   show-actuator: false
 
 logging:
