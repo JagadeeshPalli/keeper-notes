@@ -13,7 +13,6 @@ type Props = {
   onDelete: (id: string) => void
 }
 
-/* ── Checklist helpers ─────────────────────────────────────────── */
 type CheckItem = { text: string; checked: boolean }
 
 function parseChecklist(html: string): CheckItem[] {
@@ -27,16 +26,16 @@ function parseChecklist(html: string): CheckItem[] {
 }
 
 export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
-  const [showActions, setShowActions] = useState(false)
+  const [showActions, setShowActions]     = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading]             = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
-  const colors = colorStyle(note.color)
-  const isChecklist = note.noteType === 'checklist'
-  const checkItems = isChecklist && note.content ? parseChecklist(note.content) : []
-  const checkedCount = checkItems.filter((i) => i.checked).length
-  const plainText = !isChecklist && note.content
+  const cs = colorStyle(note.color)
+  const isChecklist   = note.noteType === 'checklist'
+  const checkItems    = isChecklist && note.content ? parseChecklist(note.content) : []
+  const checkedCount  = checkItems.filter((i) => i.checked).length
+  const plainText     = !isChecklist && note.content
     ? note.content.replace(/<[^>]*>/g, '').trim()
     : ''
 
@@ -68,41 +67,41 @@ export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      initial={{ opacity: 0, y: 16, scale: 0.97 }}
       animate={{ opacity: loading ? 0.3 : 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.94, y: -8 }}
+      exit={{ opacity: 0, scale: 0.93 }}
       transition={{ duration: 0.2 }}
-      className={`
-        relative rounded-2xl border cursor-pointer mb-4 break-inside-avoid group
-        ${colors.bg} ${colors.border}
-        backdrop-blur-sm
-        transition-all duration-200 ease-out
-        hover:shadow-[0_8px_32px_rgba(139,92,246,0.18)]
-        hover:-translate-y-1
-        hover:border-violet-500/35
-      `}
-      onClick={onClick}
+      className="relative rounded-2xl border cursor-pointer group transition-all duration-200 ease-out"
+      style={{
+        ...cs.bg,
+        ...cs.border,
+        boxShadow: 'var(--card-shadow)',
+      }}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => { setShowActions(false); setShowColorPicker(false) }}
+      onClick={onClick}
+      whileHover={{
+        y: -3,
+        boxShadow: 'var(--card-hover-shadow)',
+        borderColor: 'var(--border-hover)',
+      }}
     >
       {/* Pin indicator */}
       {note.pinned && (
-        <div className="absolute top-2.5 right-2.5 text-violet-400 text-xs drop-shadow" title="Pinned">
-          📌
-        </div>
+        <div className="absolute top-2.5 right-2.5 text-xs" style={{ color: 'var(--accent)' }} title="Pinned">📌</div>
       )}
 
       {/* Content */}
       <div className="p-4 pr-8">
         {note.title && (
-          <h3 className="font-semibold text-sm text-[#ede9ff] mb-1.5 leading-snug">
+          <h3 className="font-semibold text-sm mb-1.5 leading-snug" style={{ color: 'var(--text-primary)' }}>
             {note.title}
           </h3>
         )}
 
-        {/* Text preview */}
+        {/* Plain text preview */}
         {!isChecklist && plainText && (
-          <p className="text-xs text-[#9492b5] leading-relaxed line-clamp-6">
+          <p className="text-xs leading-relaxed line-clamp-6" style={{ color: 'var(--text-secondary)' }}>
             {plainText}
           </p>
         )}
@@ -112,36 +111,40 @@ export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
           <div className="space-y-1.5">
             {checkItems.slice(0, 6).map((item, i) => (
               <div key={i} className="flex items-start gap-2">
-                <span className={`mt-0.5 w-3.5 h-3.5 flex-shrink-0 rounded border text-[9px] flex items-center justify-center ${
-                  item.checked
-                    ? 'bg-violet-600/60 border-violet-500/60 text-white'
-                    : 'border-[#4d4b6a] bg-transparent'
-                }`}>
+                <span
+                  className="mt-0.5 w-3.5 h-3.5 flex-shrink-0 rounded border text-[9px] flex items-center justify-center"
+                  style={item.checked
+                    ? { background: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' }
+                    : { borderColor: 'var(--text-muted)', background: 'transparent' }}
+                >
                   {item.checked && '✓'}
                 </span>
-                <span className={`text-xs leading-relaxed ${
-                  item.checked ? 'line-through text-[#4d4b6a]' : 'text-[#9492b5]'
-                }`}>
-                  {item.text || <span className="italic text-[#3d3b58]">Empty item</span>}
+                <span
+                  className="text-xs leading-relaxed"
+                  style={{ color: item.checked ? 'var(--text-muted)' : 'var(--text-secondary)',
+                           textDecoration: item.checked ? 'line-through' : 'none' }}
+                >
+                  {item.text || <em style={{ color: 'var(--text-muted)' }}>Empty item</em>}
                 </span>
               </div>
             ))}
             {checkItems.length > 6 && (
-              <p className="text-[10px] text-[#4d4b6a] pl-5">+{checkItems.length - 6} more</p>
+              <p className="text-[10px] pl-5" style={{ color: 'var(--text-muted)' }}>+{checkItems.length - 6} more</p>
             )}
           </div>
         )}
 
-        {/* Checklist progress bar */}
+        {/* Progress bar */}
         {isChecklist && checkItems.length > 0 && (
           <div className="mt-3">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-[#4d4b6a]">{checkedCount}/{checkItems.length} done</span>
-              <span className="text-[10px] text-[#4d4b6a]">{Math.round((checkedCount / checkItems.length) * 100)}%</span>
+              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{checkedCount}/{checkItems.length} done</span>
+              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{Math.round((checkedCount / checkItems.length) * 100)}%</span>
             </div>
-            <div className="h-1 rounded-full bg-white/5 overflow-hidden">
+            <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
               <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-violet-600 to-purple-500"
+                className="h-full rounded-full"
+                style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-soft))' }}
                 initial={{ width: 0 }}
                 animate={{ width: `${(checkedCount / checkItems.length) * 100}%` }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -151,14 +154,14 @@ export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
         )}
 
         {!note.title && !plainText && !isChecklist && (
-          <p className="text-xs text-[#3d3b58] italic">Empty note</p>
+          <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>Empty note</p>
         )}
         {isChecklist && checkItems.length === 0 && (
-          <p className="text-xs text-[#3d3b58] italic">Empty checklist</p>
+          <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>Empty checklist</p>
         )}
       </div>
 
-      {/* Image thumbnails (up to 3) */}
+      {/* Image thumbnails */}
       {note.images && note.images.length > 0 && (
         <div className="px-4 pb-3 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
           {note.images.slice(0, 3).map((img, idx) => (
@@ -166,11 +169,12 @@ export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
               <img
                 src={img.url}
                 alt=""
-                className="w-16 h-16 object-cover rounded-xl border border-violet-900/20 cursor-pointer hover:opacity-90 hover:border-violet-500/30 transition-all"
+                className="w-16 h-16 object-cover rounded-xl cursor-pointer hover:opacity-90 transition-opacity"
+                style={{ border: '1px solid var(--border)' }}
                 onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx) }}
               />
               {idx === 2 && note.images.length > 3 && (
-                <div className="absolute inset-0 bg-black/65 rounded-xl flex items-center justify-center text-xs text-white font-semibold">
+                <div className="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center text-xs text-white font-semibold">
                   +{note.images.length - 3}
                 </div>
               )}
@@ -185,7 +189,8 @@ export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
           {note.labels.map((l) => (
             <span
               key={l.id}
-              className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-300/70 border border-violet-500/15"
+              className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+              style={{ background: 'var(--accent-glow)', color: 'var(--accent-soft)', border: '1px solid var(--border)' }}
             >
               {l.name}
             </span>
@@ -221,16 +226,15 @@ export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
             </ActionBtn>
 
             <div className="relative">
-              <ActionBtn title="Change color" onClick={(e) => { e.stopPropagation(); setShowColorPicker((v) => !v) }}>
-                🎨
-              </ActionBtn>
+              <ActionBtn title="Color" onClick={(e) => { e.stopPropagation(); setShowColorPicker((v) => !v) }}>🎨</ActionBtn>
               <AnimatePresence>
                 {showColorPicker && (
                   <motion.div
                     initial={{ opacity: 0, y: 4, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 4, scale: 0.95 }}
-                    className="absolute bottom-9 left-0 bg-[#111024] border border-violet-900/30 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] z-20 w-48"
+                    className="absolute bottom-9 left-0 rounded-xl shadow-2xl z-20 w-48"
+                    style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <ColorPicker value={note.color} onChange={handleColorChange} />
@@ -240,7 +244,7 @@ export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
             </div>
 
             <ActionBtn title="Archive" onClick={handleArchive}>🗂️</ActionBtn>
-            <ActionBtn title="Delete" onClick={handleDelete}>🗑️</ActionBtn>
+            <ActionBtn title="Delete"  onClick={handleDelete}>🗑️</ActionBtn>
           </motion.div>
         )}
       </AnimatePresence>
@@ -249,15 +253,16 @@ export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
 }
 
 function ActionBtn({ children, title, onClick }: {
-  children: React.ReactNode
-  title: string
-  onClick: (e: React.MouseEvent) => void
+  children: React.ReactNode; title: string; onClick: (e: React.MouseEvent) => void
 }) {
   return (
     <button
       title={title}
       onClick={onClick}
-      className="text-sm w-7 h-7 flex items-center justify-center rounded-lg bg-black/40 hover:bg-violet-600/30 backdrop-blur transition-colors duration-150"
+      className="text-sm w-7 h-7 flex items-center justify-center rounded-lg backdrop-blur transition-colors duration-150"
+      style={{ background: 'rgba(0,0,0,0.18)' }}
+      onMouseEnter={e => (e.currentTarget.style.background = 'var(--accent-glow)')}
+      onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.18)')}
     >
       {children}
     </button>

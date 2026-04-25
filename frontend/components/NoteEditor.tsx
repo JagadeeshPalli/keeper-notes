@@ -18,19 +18,18 @@ type Props = {
 }
 
 export default function NoteEditor({ note, onClose, onSave }: Props) {
-  const [title, setTitle] = useState(note?.title ?? '')
-  const [color, setColor] = useState(note?.color ?? 'default')
+  const [title, setTitle]     = useState(note?.title ?? '')
+  const [color, setColor]     = useState(note?.color ?? 'default')
   const [noteType, setNoteType] = useState<'text' | 'checklist'>(
     (note?.noteType as 'text' | 'checklist') ?? 'text'
   )
   const [showColorPicker, setShowColorPicker] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving]   = useState(false)
 
-  // Image state
-  const [images, setImages] = useState<NoteImage[]>(note?.images ?? [])
+  const [images, setImages]           = useState<NoteImage[]>(note?.images ?? [])
   const [uploadingImage, setUploadingImage] = useState(false)
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
-  const [dragOver, setDragOver] = useState(false)
+  const [lightboxIndex, setLightboxIndex]   = useState<number | null>(null)
+  const [dragOver, setDragOver]       = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const editor = useEditor({
@@ -44,12 +43,12 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
     content: note?.content ?? '',
     editorProps: {
       attributes: {
-        class: 'outline-none min-h-[120px] text-sm text-[#ede9ff] leading-relaxed',
+        class: 'tiptap outline-none min-h-[120px] text-sm leading-relaxed',
+        style: 'color: var(--text-primary)',
       },
     },
   })
 
-  // Close on Escape (not when lightbox open)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape' && lightboxIndex === null) handleSave()
@@ -90,11 +89,7 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
       if (next === 'checklist') {
         editor.commands.insertContent({
           type: 'taskList',
-          content: [{
-            type: 'taskItem',
-            attrs: { checked: false },
-            content: [{ type: 'paragraph' }],
-          }],
+          content: [{ type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph' }] }],
         })
       }
       editor.commands.focus()
@@ -129,7 +124,7 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
     if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files)
   }
 
-  const colors = colorStyle(color)
+  const cs = colorStyle(color)
 
   return (
     <>
@@ -140,7 +135,8 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/70 backdrop-blur-md z-40"
+          className="fixed inset-0 z-40"
+          style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(8px)' }}
           onClick={handleSave}
         />
 
@@ -151,12 +147,12 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94 }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
-          className={`
-            fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-            w-full max-w-lg rounded-2xl border shadow-[0_24px_80px_rgba(0,0,0,0.7)]
-            ${colors.bg} ${colors.border}
-            ${dragOver ? 'ring-2 ring-violet-500/50 shadow-[0_0_40px_rgba(139,92,246,0.25)]' : ''}
-          `}
+          className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg rounded-2xl border shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
+          style={{
+            ...cs.bg,
+            ...cs.border,
+            ...(dragOver ? { boxShadow: '0 0 0 2px var(--accent), 0 24px_80px rgba(0,0,0,0.6)' } : {}),
+          }}
           onClick={(e) => e.stopPropagation()}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
           onDragLeave={() => setDragOver(false)}
@@ -164,7 +160,10 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
         >
           {/* Note type badge */}
           {noteType === 'checklist' && (
-            <div className="absolute -top-3 left-4 bg-violet-600 text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-lg">
+            <div
+              className="absolute -top-3 left-4 text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full shadow-lg"
+              style={{ background: 'var(--accent)' }}
+            >
               ✓ Checklist
             </div>
           )}
@@ -175,7 +174,8 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Title"
-              className="w-full bg-transparent text-[#ede9ff] font-semibold text-base outline-none placeholder-[#4d4b6a] mb-3"
+              className="w-full bg-transparent font-semibold text-base outline-none mb-3"
+              style={{ color: 'var(--text-primary)', caretColor: 'var(--accent)' }}
             />
 
             {/* Tiptap editor */}
@@ -191,12 +191,14 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
                         <img
                           src={img.url}
                           alt=""
-                          className="w-20 h-20 object-cover rounded-xl border border-violet-900/20 cursor-pointer hover:border-violet-500/40 transition-all"
+                          className="w-20 h-20 object-cover rounded-xl cursor-pointer hover:opacity-90 transition-all"
+                          style={{ border: '1px solid var(--border)' }}
                           onClick={() => setLightboxIndex(idx)}
                         />
                         <button
                           onClick={(e) => handleDeleteImage(img, e)}
-                          className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-[#0d0c1a] border border-violet-900/40 text-[#9492b5] hover:text-white hover:border-violet-500/50 text-[10px] opacity-0 group-hover/img:opacity-100 transition-all"
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full text-[10px] opacity-0 group-hover/img:opacity-100 transition-all"
+                          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
                         >✕</button>
                       </div>
                     ))}
@@ -205,10 +207,13 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingImage}
-                  className="text-xs text-[#4d4b6a] hover:text-violet-400 transition-colors flex items-center gap-1.5 disabled:opacity-40"
+                  className="text-xs flex items-center gap-1.5 disabled:opacity-40 transition-colors"
+                  style={{ color: 'var(--text-muted)' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'var(--accent-soft)')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
                 >
                   {uploadingImage
-                    ? <><span className="w-3 h-3 border border-[#4d4b6a] border-t-violet-400 rounded-full animate-spin" /> Uploading…</>
+                    ? <><span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> Uploading…</>
                     : <><span>🖼️</span> Add image (or drop here)</>
                   }
                 </button>
@@ -219,7 +224,10 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
           </div>
 
           {/* Toolbar */}
-          <div className="flex items-center justify-between px-4 py-3 border-t border-violet-900/20">
+          <div
+            className="flex items-center justify-between px-4 py-3 border-t"
+            style={{ borderColor: 'var(--border)' }}
+          >
             <div className="flex items-center gap-1.5">
               {/* Color picker */}
               <div className="relative">
@@ -230,7 +238,8 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
                       initial={{ opacity: 0, y: 6, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 6, scale: 0.95 }}
-                      className="absolute bottom-11 left-0 bg-[#111024] border border-violet-900/30 rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.6)] z-20 w-52"
+                      className="absolute bottom-11 left-0 rounded-xl shadow-2xl z-20 w-52"
+                      style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                     >
                       <ColorPicker value={color} onChange={(c) => { setColor(c); setShowColorPicker(false) }} />
                     </motion.div>
@@ -266,7 +275,7 @@ export default function NoteEditor({ note, onClose, onSave }: Props) {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="btn-violet text-xs px-4 py-1.5 rounded-lg disabled:opacity-50"
+              className="btn-accent text-xs px-4 py-1.5 rounded-lg disabled:opacity-50"
             >
               {saving ? 'Saving…' : 'Close'}
             </button>
@@ -299,11 +308,12 @@ function ToolBtn({ children, active, onClick, title }: {
     <button
       onClick={onClick}
       title={title}
-      className={`text-sm w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150 font-medium ${
-        active
-          ? 'bg-violet-600/30 text-violet-300 shadow-[0_0_8px_rgba(139,92,246,0.3)]'
-          : 'text-[#4d4b6a] hover:bg-white/[0.06] hover:text-[#ede9ff]'
-      }`}
+      className="text-sm w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150 font-medium"
+      style={active
+        ? { background: 'var(--accent-glow)', color: 'var(--accent-soft)', boxShadow: '0 0 8px var(--accent-glow)' }
+        : { color: 'var(--text-muted)' }}
+      onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'var(--bg-elevated)'; e.currentTarget.style.color = 'var(--text-primary)' } }}
+      onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' } }}
     >
       {children}
     </button>

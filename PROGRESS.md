@@ -327,15 +327,33 @@ Invoke-RestMethod -Method GET -Uri "http://localhost:8081/api/auth/me" `
 
 ---
 
-### Phase 5 — Checklist Notes ← NEXT
+### ✅ Phase 5 — Checklist Notes
+**Status:** Complete  
+**Date:** 2026-04-24
+
+#### What was built
+
+**Backend:**
+- Added `noteType` column (`text` | `checklist`) to `notes` table (Flyway migration)
+- `NoteRequest` / `NoteResponse` updated to carry `noteType`
+
+**Frontend:**
+
+| File | Purpose |
+|---|---|
+| `components/NoteEditor.tsx` | Toggle button switches between text and checklist mode; inserts Tiptap `taskList` / `taskItem` nodes; "✓ Checklist" badge floats above modal |
+| `components/NoteCard.tsx` | Parses `data-checked` attributes from saved HTML to render mini checklist preview; animated progress bar showing X/Y done + percentage |
+
+#### Deliverable verified
+```
+- Toggle text ↔ checklist in editor ✅
+- Checklist items render with native Tiptap checkboxes ✅
+- Card preview shows up to 6 items with checked/unchecked state ✅
+- Progress bar animates on card ✅
+- "+N more" shown when > 6 items ✅
+```
 
 ---
-
-### Phase 5 — Checklist Notes
-- Note type toggle: text vs checklist
-- Drag-to-reorder checklist items
-- Checked items move to bottom with strikethrough
-- Progress bar on card (X/Y complete)
 
 ---
 
@@ -379,6 +397,29 @@ Invoke-RestMethod -Method GET -Uri "http://localhost:8081/api/auth/me" `
 - Card color shifts based on mood: positive=warm yellow, excited=orange, anxious=blue-purple, negative=cool gray
 - User toggle in settings (off by default)
 - Manual color override always wins
+
+---
+
+### 🔲 Phase 11.5 — UI Polish (Obsidian Violet Theme)
+**Status:** In Progress  
+**Goal:** Transform the app from a functional prototype into a portfolio-worthy product.
+
+#### Completed
+- Full CSS custom-property design system — `:root` (light) + `.dark` (dark), 10 note color pairs, card shadows
+- `next-themes` integration — `ThemeProvider`, `ThemeToggle` component, `suppressHydrationWarning` on `<html>`
+- Custom SVG `Logo` component with gradient note + pen motif
+- **Auth pages** (login / register): CSS-variable backgrounds, animated ambient blobs, grid overlay, real ThemeToggle + Logo, themed glass card
+- **Dashboard**: Logo + ThemeToggle in header, all hardcoded colors replaced with CSS vars, FAB (floating `+` button) replaces old "Take a note" bar, `react-masonry-css` for true Pinterest-style column alignment
+- **NoteCard**: CSS-variable card backgrounds (10 colors × light/dark), hover lift with `whileHover`, checklist mini preview + animated progress bar, image thumbnails, label chips
+- **NoteEditor**: CSS-variable modal, themed toolbar buttons, `btn-accent` CTA
+- **ColorPicker**: swatch dots from `NOTE_COLORS.swatch` — unchanged, still works
+- `::placeholder` global CSS rule using `var(--text-muted)` for both themes
+- Axios 401 interceptor fix — no longer redirects on failed login/register (only on expired session)
+
+#### Still To Do
+- Animations / micro-interactions polish pass
+- Input placeholder color on Firefox (`::-moz-placeholder`)
+- Possible mobile responsive sidebar (hamburger drawer)
 
 ---
 

@@ -14,11 +14,14 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// On 401, clear tokens and redirect to login
+// On 401, clear tokens and redirect — but NOT for auth endpoints themselves
+// (a failed login attempt also returns 401; we want the form to show the error)
 api.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401) {
+    const url: string = error.config?.url ?? ''
+    const isAuthEndpoint = url.includes('/api/auth/')
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
       window.location.href = '/login'

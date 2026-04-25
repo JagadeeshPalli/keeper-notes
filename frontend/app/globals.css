@@ -1,18 +1,60 @@
 @import "tailwindcss";
 
-/* ── Obsidian Violet theme ─────────────────────────────────────── */
+/* ── Light theme (default) ─────────────────────────────────────── */
 :root {
+  --bg-root:     #f5f4ff;
+  --bg-surface:  #ffffff;
+  --bg-elevated: #eeecff;
+  --accent:      #7c3aed;
+  --accent-soft: #8b5cf6;
+  --accent-glow: rgba(124, 58, 237, 0.14);
+  --border:      rgba(124, 58, 237, 0.10);
+  --border-hover:rgba(124, 58, 237, 0.26);
+  --text-primary:  #1c1a2e;
+  --text-secondary:#6b6894;
+  --text-muted:    #a09dcc;
+  --card-shadow:      0 1px 10px rgba(0,0,0,0.06), 0 0 0 1px rgba(124,58,237,0.06);
+  --card-hover-shadow:0 8px 28px rgba(124,58,237,0.14);
+
+  /* Note card accent backgrounds */
+  --note-default-bg: #ffffff;        --note-default-border: rgba(124,58,237,0.09);
+  --note-red-bg:    #fff5f5;         --note-red-border:    rgba(239,68,68,0.16);
+  --note-orange-bg: #fff8f0;         --note-orange-border: rgba(234,88,12,0.16);
+  --note-yellow-bg: #fffef0;         --note-yellow-border: rgba(202,138,4,0.18);
+  --note-green-bg:  #f0fff4;         --note-green-border:  rgba(22,163,74,0.16);
+  --note-teal-bg:   #f0fffe;         --note-teal-border:   rgba(13,148,136,0.16);
+  --note-blue-bg:   #f0f4ff;         --note-blue-border:   rgba(37,99,235,0.16);
+  --note-purple-bg: #f8f0ff;         --note-purple-border: rgba(147,51,234,0.16);
+  --note-pink-bg:   #fff0f8;         --note-pink-border:   rgba(219,39,119,0.16);
+  --note-brown-bg:  #fdf8f5;         --note-brown-border:  rgba(120,53,15,0.16);
+}
+
+/* ── Dark theme ────────────────────────────────────────────────── */
+.dark {
   --bg-root:     #07070f;
   --bg-surface:  #0d0c1a;
   --bg-elevated: #111024;
   --accent:      #8b5cf6;
   --accent-soft: #a78bfa;
-  --accent-glow: rgba(139, 92, 246, 0.22);
-  --border:      rgba(139, 92, 246, 0.14);
-  --border-hover:rgba(139, 92, 246, 0.32);
+  --accent-glow: rgba(139,92,246,0.22);
+  --border:      rgba(139,92,246,0.14);
+  --border-hover:rgba(139,92,246,0.32);
   --text-primary:  #ede9ff;
   --text-secondary:#9492b5;
   --text-muted:    #4d4b6a;
+  --card-shadow:      none;
+  --card-hover-shadow:0 8px 32px rgba(139,92,246,0.18);
+
+  --note-default-bg: #0d0c1a;        --note-default-border: rgba(139,92,246,0.15);
+  --note-red-bg:    #160808;         --note-red-border:    rgba(239,68,68,0.25);
+  --note-orange-bg: #160d06;         --note-orange-border: rgba(234,88,12,0.25);
+  --note-yellow-bg: #151008;         --note-yellow-border: rgba(202,138,4,0.25);
+  --note-green-bg:  #081408;         --note-green-border:  rgba(22,163,74,0.25);
+  --note-teal-bg:   #061412;         --note-teal-border:   rgba(13,148,136,0.25);
+  --note-blue-bg:   #070912;         --note-blue-border:   rgba(37,99,235,0.25);
+  --note-purple-bg: #0f0818;         --note-purple-border: rgba(147,51,234,0.25);
+  --note-pink-bg:   #160818;         --note-pink-border:   rgba(219,39,119,0.25);
+  --note-brown-bg:  #140e0a;         --note-brown-border:  rgba(120,53,15,0.28);
 }
 
 /* ── Base ───────────────────────────────────────────────────────── */
@@ -20,16 +62,14 @@ body {
   background: var(--bg-root);
   color: var(--text-primary);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background 0.25s, color 0.25s;
 }
 
 /* ── Custom scrollbar ───────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.28);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.50); }
+::-webkit-scrollbar              { width: 5px; height: 5px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-thumb        { background: rgba(139,92,246,0.28); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover  { background: rgba(139,92,246,0.50); }
 
 /* ── Tiptap editor ──────────────────────────────────────────────── */
 .tiptap p.is-editor-empty:first-child::before {
@@ -39,77 +79,58 @@ body {
   float: left;
   height: 0;
 }
-
 .tiptap ul          { list-style: disc;    padding-left: 1.25rem; }
 .tiptap ol          { list-style: decimal; padding-left: 1.25rem; }
 .tiptap strong      { font-weight: 600; }
 .tiptap em          { font-style: italic; }
 .tiptap p           { margin: 0 0 0.4rem 0; }
-.tiptap p:last-child { margin-bottom: 0; }
+.tiptap p:last-child{ margin-bottom: 0; }
 
 /* ── TaskList / checklist ───────────────────────────────────────── */
-.tiptap ul[data-type="taskList"] {
-  list-style: none;
-  padding-left: 0;
-}
-.tiptap ul[data-type="taskList"] li[data-type="taskItem"] {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin-bottom: 0.3rem;
-}
-.tiptap ul[data-type="taskList"] li > label {
-  flex-shrink: 0;
-  margin-top: 2px;
-  display: flex;
-  align-items: center;
-}
-.tiptap ul[data-type="taskList"] li > label input[type="checkbox"] {
-  accent-color: var(--accent);
-  width: 14px;
-  height: 14px;
-  cursor: pointer;
-  border-radius: 3px;
-}
-.tiptap ul[data-type="taskList"] li[data-checked="true"] > div > p {
-  text-decoration: line-through;
-  color: var(--text-muted);
-}
-.tiptap ul[data-type="taskList"] li > div { flex: 1; }
+.tiptap ul[data-type="taskList"]                          { list-style: none; padding-left: 0; }
+.tiptap ul[data-type="taskList"] li[data-type="taskItem"] { display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.3rem; }
+.tiptap ul[data-type="taskList"] li > label               { flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; }
+.tiptap ul[data-type="taskList"] li > label input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+.tiptap ul[data-type="taskList"] li[data-checked="true"] > div > p { text-decoration: line-through; color: var(--text-muted); }
+.tiptap ul[data-type="taskList"] li > div                 { flex: 1; }
 
-/* ── Animated background blobs (for auth pages) ─────────────────── */
+/* ── Animated background blobs ──────────────────────────────────── */
 @keyframes blob-drift {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%       { transform: translate(20px, -30px) scale(1.05); }
-  66%       { transform: translate(-15px, 20px) scale(0.97); }
+  0%, 100% { transform: translate(0, 0)   scale(1);    }
+  33%       { transform: translate(20px,-30px) scale(1.05); }
+  66%       { transform: translate(-15px,20px) scale(0.97); }
 }
-.animate-blob { animation: blob-drift 8s ease-in-out infinite; }
-.animation-delay-2000 { animation-delay: 2s; }
-.animation-delay-4000 { animation-delay: 4s; }
+.animate-blob              { animation: blob-drift 8s ease-in-out infinite; }
+.animation-delay-2000      { animation-delay: 2s; }
+.animation-delay-4000      { animation-delay: 4s; }
 
-/* ── Glow button ────────────────────────────────────────────────── */
-.btn-violet {
-  background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+/* ── Input placeholder color ───────────────────────────────────── */
+::placeholder { color: var(--text-muted); opacity: 1; }
+
+/* ── Global utilities ───────────────────────────────────────────── */
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent), var(--accent-soft));
   color: #fff;
   font-weight: 600;
   transition: all 0.2s;
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
+  box-shadow: 0 4px 20px var(--accent-glow);
 }
-.btn-violet:hover {
-  background: linear-gradient(135deg, #6d28d9, #7c3aed);
-  box-shadow: 0 6px 28px rgba(139, 92, 246, 0.50);
+.btn-accent:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 6px 28px rgba(139,92,246,0.45);
   transform: translateY(-1px);
 }
-.btn-violet:disabled {
-  opacity: 0.5;
-  transform: none;
-  box-shadow: none;
-  cursor: not-allowed;
-}
+.btn-accent:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
 
-/* ── Glass card ─────────────────────────────────────────────────── */
 .glass {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255,255,255,0.04);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border);
 }
+.dark .glass {
+  background: rgba(255,255,255,0.03);
+}
+
+/* react-masonry-css columns */
+.masonry-grid         { display: flex; gap: 14px; }
+.masonry-grid-column  { display: flex; flex-direction: column; gap: 14px; }

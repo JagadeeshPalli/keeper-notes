@@ -36,21 +36,26 @@ export type NoteRequest = {
   labelIds?: string[]
 }
 
-export const NOTE_COLORS: { id: string; bg: string; border: string; swatch: string }[] = [
-  { id: 'default', bg: 'bg-[#0d0c1a]',  border: 'border-violet-900/25', swatch: 'bg-violet-500' },
-  { id: 'red',     bg: 'bg-[#160808]',  border: 'border-red-900/40',    swatch: 'bg-red-500'    },
-  { id: 'orange',  bg: 'bg-[#160d06]',  border: 'border-orange-900/40', swatch: 'bg-orange-500' },
-  { id: 'yellow',  bg: 'bg-[#151008]',  border: 'border-yellow-900/40', swatch: 'bg-yellow-400' },
-  { id: 'green',   bg: 'bg-[#081408]',  border: 'border-green-900/40',  swatch: 'bg-green-500'  },
-  { id: 'teal',    bg: 'bg-[#061412]',  border: 'border-teal-900/40',   swatch: 'bg-teal-400'   },
-  { id: 'blue',    bg: 'bg-[#070912]',  border: 'border-blue-900/40',   swatch: 'bg-blue-500'   },
-  { id: 'purple',  bg: 'bg-[#0f0818]',  border: 'border-purple-900/40', swatch: 'bg-purple-500' },
-  { id: 'pink',    bg: 'bg-[#160818]',  border: 'border-pink-900/40',   swatch: 'bg-pink-500'   },
-  { id: 'brown',   bg: 'bg-[#140e0a]',  border: 'border-stone-800/40',  swatch: 'bg-stone-500'  },
+export const NOTE_COLORS: { id: string; bgVar: string; swatch: string }[] = [
+  { id: 'default', bgVar: 'note-default', swatch: 'bg-violet-500' },
+  { id: 'red',     bgVar: 'note-red',     swatch: 'bg-red-500'    },
+  { id: 'orange',  bgVar: 'note-orange',  swatch: 'bg-orange-500' },
+  { id: 'yellow',  bgVar: 'note-yellow',  swatch: 'bg-yellow-400' },
+  { id: 'green',   bgVar: 'note-green',   swatch: 'bg-green-500'  },
+  { id: 'teal',    bgVar: 'note-teal',    swatch: 'bg-teal-400'   },
+  { id: 'blue',    bgVar: 'note-blue',    swatch: 'bg-blue-500'   },
+  { id: 'purple',  bgVar: 'note-purple',  swatch: 'bg-purple-500' },
+  { id: 'pink',    bgVar: 'note-pink',    swatch: 'bg-pink-500'   },
+  { id: 'brown',   bgVar: 'note-brown',   swatch: 'bg-stone-500'  },
 ]
 
-export function colorStyle(colorId: string) {
-  return NOTE_COLORS.find((c) => c.id === colorId) ?? NOTE_COLORS[0]
+/** Returns inline style object for background + border — works in both light and dark themes */
+export function colorStyle(colorId: string): { bg: React.CSSProperties; border: React.CSSProperties } {
+  const c = NOTE_COLORS.find((n) => n.id === colorId) ?? NOTE_COLORS[0]
+  return {
+    bg:     { background: `var(--${c.bgVar}-bg)` },
+    border: { borderColor: `var(--${c.bgVar}-border)` },
+  }
 }
 
 export const notesApi = {
