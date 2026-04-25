@@ -39,3 +39,7 @@ logs/
 
 # ─── Dev tooling (never committed) ─────────────────────────────────────────────
 .claude/
+
+# ─── AI agent context files (local only, never committed) ───────────────────
+frontend/CLAUDE.md
+frontend/AGENTS.md
