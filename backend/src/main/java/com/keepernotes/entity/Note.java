@@ -5,8 +5,12 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import org.hibernate.annotations.BatchSize;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -71,6 +75,13 @@ public class Note {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Set<Label> labels = new HashSet<>();
+
+    @OneToMany(mappedBy = "note", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @BatchSize(size = 20)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<NoteImage> images = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

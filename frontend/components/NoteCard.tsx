@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { Note, notesApi, colorStyle } from '@/lib/notesApi'
 import ColorPicker from './ColorPicker'
+import ImageLightbox from './ImageLightbox'
 
 type Props = {
   note: Note
@@ -16,6 +17,7 @@ export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
   const [showActions, setShowActions] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   const colors = colorStyle(note.color)
 
@@ -83,6 +85,30 @@ export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
         )}
       </div>
 
+      {/* Image thumbnails (up to 3) */}
+      {note.images && note.images.length > 0 && (
+        <div
+          className="px-4 pb-3 flex gap-1.5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {note.images.slice(0, 3).map((img, idx) => (
+            <div key={img.id} className="relative">
+              <img
+                src={img.url}
+                alt=""
+                className="w-16 h-16 object-cover rounded-lg border border-white/10 cursor-pointer hover:opacity-90 transition"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx) }}
+              />
+              {idx === 2 && note.images.length > 3 && (
+                <div className="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center text-xs text-white font-medium">
+                  +{note.images.length - 3}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Labels */}
       {note.labels.length > 0 && (
         <div className="px-4 pb-3 flex flex-wrap gap-1">
@@ -95,6 +121,16 @@ export default function NoteCard({ note, onClick, onUpdate, onDelete }: Props) {
             </span>
           ))}
         </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && note.images && note.images.length > 0 && (
+        <ImageLightbox
+          images={note.images}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
+        />
       )}
 
       {/* Hover action bar */}

@@ -11,6 +11,7 @@ public class AppProperties {
 
     private Jwt jwt = new Jwt();
     private Ai ai = new Ai();
+    private Storage storage = new Storage();
     private String frontendUrl = "http://localhost:3000";
 
     @Data
@@ -25,5 +26,14 @@ public class AppProperties {
         private String geminiApiKey;
         private int rateLimitRequests = 10;
         private int rateLimitWindowHours = 1;
+    }
+
+    @Data
+    public static class Storage {
+        private String r2AccountId = "";
+        private String r2AccessKey = "";
+        private String r2SecretKey = "";
+        private String r2BucketName = "keepernotes-files";
+        private String r2PublicUrl = "";
     }
 }

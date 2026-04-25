@@ -28,6 +28,7 @@ public class NoteService {
     private final LabelRepository labelRepository;
     private final UserRepository userRepository;
 
+    @Transactional(readOnly = true)
     public List<NoteResponse> getActive(UUID userId, String search, UUID labelId) {
         if (labelId != null) {
             return noteRepository.findByLabel(userId, labelId)
@@ -38,11 +39,13 @@ public class NoteService {
                 .stream().map(NoteResponse::from).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<NoteResponse> getArchived(UUID userId) {
         return noteRepository.findArchived(userId)
                 .stream().map(NoteResponse::from).toList();
     }
 
+    @Transactional(readOnly = true)
     public NoteResponse getById(UUID userId, UUID noteId) {
         Note note = findOwned(userId, noteId);
         return NoteResponse.from(note);

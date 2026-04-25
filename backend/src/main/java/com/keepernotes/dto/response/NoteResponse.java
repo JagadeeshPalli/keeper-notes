@@ -21,6 +21,7 @@ public class NoteResponse {
     private boolean pinned;
     private boolean archived;
     private List<LabelResponse> labels;
+    private List<NoteImageResponse> images;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -37,6 +38,9 @@ public class NoteResponse {
                 .labels(note.getLabels().stream()
                         .map(LabelResponse::from)
                         .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
+                        .toList())
+                .images(note.getImages().stream()
+                        .map(NoteImageResponse::from)
                         .toList())
                 .createdAt(note.getCreatedAt())
                 .updatedAt(note.getUpdatedAt())

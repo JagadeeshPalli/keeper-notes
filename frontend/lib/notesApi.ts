@@ -1,5 +1,12 @@
 import { api, ApiResponse } from './api'
 
+export type NoteImage = {
+  id: string
+  url: string
+  fileSize: number | null
+  createdAt: string
+}
+
 export type Note = {
   id: string
   title: string | null
@@ -10,6 +17,7 @@ export type Note = {
   pinned: boolean
   archived: boolean
   labels: Label[]
+  images: NoteImage[]
   createdAt: string
   updatedAt: string
 }
@@ -66,6 +74,17 @@ export const notesApi = {
   pin: (id: string) => api.put<ApiResponse<Note>>(`/api/notes/${id}/pin`),
 
   archive: (id: string) => api.put<ApiResponse<Note>>(`/api/notes/${id}/archive`),
+
+  uploadImage: (noteId: string, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post<ApiResponse<NoteImage>>(`/api/notes/${noteId}/images`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+
+  deleteImage: (noteId: string, imageId: string) =>
+    api.delete(`/api/notes/${noteId}/images/${imageId}`),
 }
 
 export const labelsApi = {
