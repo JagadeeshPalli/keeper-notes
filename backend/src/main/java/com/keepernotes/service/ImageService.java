@@ -54,7 +54,7 @@ public class ImageService {
                 .note(note)
                 .url(url)
                 .r2Key(key)
-                .fileSize(file.getSize())
+                .fileSize((int) file.getSize())
                 .build();
 
         return NoteImageResponse.from(imageRepository.save(image));

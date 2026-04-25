@@ -3,7 +3,7 @@ import { api, ApiResponse } from './api'
 export type NoteImage = {
   id: string
   url: string
-  fileSize: number | null
+  fileSize: number | null   // int (bytes), max ~2.1 GB — fits INT column
   createdAt: string
 }
 

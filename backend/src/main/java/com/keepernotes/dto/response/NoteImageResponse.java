@@ -13,7 +13,7 @@ public class NoteImageResponse {
 
     private UUID id;
     private String url;
-    private Long fileSize;
+    private Integer fileSize;
     private LocalDateTime createdAt;
 
     public static NoteImageResponse from(NoteImage image) {

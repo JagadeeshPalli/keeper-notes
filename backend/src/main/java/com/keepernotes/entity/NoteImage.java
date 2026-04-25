@@ -32,7 +32,7 @@ public class NoteImage {
     private String r2Key;
 
     @Column(name = "file_size")
-    private Long fileSize;
+    private Integer fileSize;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
