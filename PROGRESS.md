@@ -274,11 +274,60 @@ Invoke-RestMethod -Method GET -Uri "http://localhost:8081/api/auth/me" `
 
 ## 🔲 Phases Yet to Come
 
-### Phase 4 — Image Attachments ← NEXT
-- Upload images to Cloudflare R2
-- Drag-and-drop + paste into note editor
-- Image thumbnail strip on note cards
-- Lightbox view
+### ✅ Phase 4 — Image Attachments
+**Status:** Complete
+**Date:** 2026-04-24
+
+#### What was built
+
+**Backend:**
+
+| File | Purpose |
+|---|---|
+| `entity/NoteImage.java` | JPA entity mapped to `note_images` table (url, r2Key, fileSize as Integer) |
+| `repository/NoteImageRepository.java` | findByIdAndNoteId lookup |
+| `dto/response/NoteImageResponse.java` | id, url, fileSize, createdAt |
+| `service/R2Service.java` | S3Client pointed at R2 endpoint, upload() and delete() |
+| `service/ImageService.java` | Validates file type (image/*) and size (≤5 MB), orchestrates upload/delete |
+| `controller/ImageController.java` | POST `/api/notes/{id}/images`, DELETE `/api/notes/{id}/images/{imageId}` |
+| `entity/Note.java` | Added `@OneToMany images` with `@BatchSize(size=20)` for lazy loading |
+| `dto/response/NoteResponse.java` | Added `images: List<NoteImageResponse>` |
+| `service/NoteService.java` | Read methods annotated `@Transactional(readOnly=true)` for lazy image loading |
+| `application.yml` | `spring.servlet.multipart.max-file-size: 10MB` |
+
+**Frontend:**
+
+| File | Purpose |
+|---|---|
+| `lib/notesApi.ts` | `NoteImage` type, `uploadImage()`, `deleteImage()` |
+| `components/ImageLightbox.tsx` | React portal on `document.body` (fixes transform stacking context), `AnimatePresence mode="wait"` crossfade, keyboard nav (capture phase), z-index 500 |
+| `components/NoteEditor.tsx` | Drag-and-drop zone, file input button, 80×80 thumbnail grid with ✕ delete, lightbox trigger |
+| `components/NoteCard.tsx` | Up to 3 image thumbnails with +N overflow badge, lightbox trigger |
+
+#### Issues encountered & resolved
+| Issue | Fix |
+|---|---|
+| `file_size` type mismatch: `Long` vs DB `int4` | Changed entity and DTO to `Integer`, cast `file.getSize()` |
+| Duplicate `AppProperties` bean (2 found) | Removed `@Component` — `@EnableConfigurationProperties` in main class is sufficient |
+| Lightbox wrong position/behind navbar from card view | `NoteCard` uses Framer Motion `layout` (CSS transform) which breaks `position:fixed` children — fixed with `createPortal` to `document.body` |
+| Lightbox flickering on open/close | Moved `AnimatePresence` ownership to parent; `mode="wait"` on image crossfade |
+| Escape key closed lightbox AND triggered editor save | Lightbox registers keydown in capture phase, intercepts before editor sees it |
+
+#### Deliverable verified
+```
+- Drop or select image in editor → uploads to R2, thumbnail appears ✅
+- Up to 3 thumbnails shown on note card, +N badge if more ✅
+- Click thumbnail from card → lightbox opens centered on viewport ✅
+- Click thumbnail in editor → lightbox opens ✅
+- ← → arrow keys / prev-next buttons navigate images ✅
+- Esc / backdrop click closes cleanly with fade animation ✅
+- ✕ button on thumbnail in editor → deletes from R2 + DB ✅
+- No flicker, no navbar overlap, correct centering ✅
+```
+
+---
+
+### Phase 5 — Checklist Notes ← NEXT
 
 ---
 
@@ -287,6 +336,8 @@ Invoke-RestMethod -Method GET -Uri "http://localhost:8081/api/auth/me" `
 - Drag-to-reorder checklist items
 - Checked items move to bottom with strikethrough
 - Progress bar on card (X/Y complete)
+
+---
 
 ---
 
