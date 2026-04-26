@@ -105,7 +105,7 @@ public class AiService {
 
     private String buildPrompt(String action, String title, String text) {
         String context = (title != null && !title.isBlank())
-            ? "Title: " + title + "\n\nContent:\n" + text
+            ? "Title: " + title + "\n\n" + text
             : text;
 
         return switch (action) {
@@ -116,11 +116,12 @@ public class AiService {
                 """ + context;
 
             case "grammar" -> """
-                Fix grammar, spelling and punctuation in the following text. \
-                Preserve the original meaning and tone. \
-                Return only the corrected text, no explanation.
+                Fix grammar, spelling and punctuation in the text below. \
+                Preserve the original meaning, tone, and structure exactly. \
+                Output ONLY the corrected text — no labels, no headers, \
+                no "Content:", no preamble, no explanation of any kind.
 
-                """ + context;
+                """ + text;
 
             case "labels" -> """
                 Suggest 3 to 5 short label tags for the following note. \

@@ -16,12 +16,16 @@ type Props = {
 type CheckItem = { text: string; checked: boolean }
 
 function parseChecklist(html: string): CheckItem[] {
+  // Use DOMParser for reliable parsing of Tiptap TaskList HTML
+  if (typeof window === 'undefined') return []
+  const doc = new DOMParser().parseFromString(html, 'text/html')
   const items: CheckItem[] = []
-  const re = /data-checked="(true|false)"[^>]*>[\s\S]*?<p>([\s\S]*?)<\/p>/g
-  let m: RegExpExecArray | null
-  while ((m = re.exec(html)) !== null) {
-    items.push({ checked: m[1] === 'true', text: m[2].replace(/<[^>]*>/g, '').trim() })
-  }
+  doc.querySelectorAll('li[data-checked]').forEach((li) => {
+    const checked = li.getAttribute('data-checked') === 'true'
+    // Tiptap wraps text in <div><p>...</p></div> inside the li
+    const textEl = li.querySelector('div p') ?? li.querySelector('p') ?? li
+    items.push({ checked, text: textEl.textContent?.trim() ?? '' })
+  })
   return items
 }
 
